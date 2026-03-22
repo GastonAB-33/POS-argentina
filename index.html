@@ -5,376 +5,155 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Carga de producto · IA</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0f0f11;
-    --surface: #18181c;
-    --surface2: #222228;
-    --border: #2e2e38;
-    --accent: #7c6af7;
-    --accent-soft: #7c6af718;
-    --accent2: #34d399;
-    --text: #e8e8f0;
-    --muted: #888899;
-    --danger: #f87171;
-    --warn: #fbbf24;
-    --font: 'DM Sans', sans-serif;
-    --mono: 'DM Mono', monospace;
-    --r: 14px;
-    --rs: 8px;
+    --bg:#0f0f11; --surface:#18181c; --surface2:#222228; --border:#2e2e38;
+    --accent:#7c6af7; --accent-soft:#7c6af718; --accent2:#34d399;
+    --text:#e8e8f0; --muted:#888899; --danger:#f87171; --warn:#fbbf24;
+    --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace; --r:14px; --rs:8px;
   }
+  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px 14px 60px; }
+  header { text-align:center; margin-bottom:26px; }
+  .logo-tag { display:inline-flex; align-items:center; gap:6px; background:var(--accent-soft); border:1px solid #7c6af733; border-radius:99px; padding:4px 14px; font-size:11px; color:var(--accent); letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; font-weight:500; }
+  header h1 { font-size:24px; font-weight:600; letter-spacing:-.02em; }
+  header p { color:var(--muted); font-size:13px; margin-top:5px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:20px; width:100%; max-width:520px; margin-bottom:14px; }
+  .card-title { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:500; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .card-title .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  .input-tabs { display:flex; gap:6px; margin-bottom:14px; }
+  .tab-btn { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); color:var(--muted); font-family:var(--font); font-size:12px; font-weight:500; padding:9px 4px; cursor:pointer; transition:all .18s; text-align:center; }
+  .tab-btn.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
 
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 14px 60px;
-  }
+  /* SCANNER */
+  #scanner-container { position:relative; width:100%; background:#000; border-radius:var(--rs); overflow:hidden; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; }
+  #scanner-video { width:100%; height:100%; object-fit:cover; display:block; }
+  #scanner-canvas { display:none; }
+  .scan-ui { position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center; }
+  .scan-box { width:65%; max-width:240px; height:100px; border:2px solid var(--accent2); border-radius:10px; position:relative; }
+  .scan-line { position:absolute; left:0; right:0; height:2px; background:var(--accent2); opacity:.85; animation:scanmove 1.8s ease-in-out infinite; }
+  @keyframes scanmove { 0%{top:4px} 50%{top:calc(100% - 6px)} 100%{top:4px} }
+  .sc { position:absolute; width:14px; height:14px; border-color:var(--accent2); border-style:solid; border-width:0; }
+  .sc.tl{top:-2px;left:-2px;border-top-width:3px;border-left-width:3px;border-radius:4px 0 0 0}
+  .sc.tr{top:-2px;right:-2px;border-top-width:3px;border-right-width:3px;border-radius:0 4px 0 0}
+  .sc.bl{bottom:-2px;left:-2px;border-bottom-width:3px;border-left-width:3px;border-radius:0 0 0 4px}
+  .sc.br{bottom:-2px;right:-2px;border-bottom-width:3px;border-right-width:3px;border-radius:0 0 4px 0}
+  #scan-msg { position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:12px; color:#ffffffcc; font-family:var(--mono); }
+  #scan-idle-btn { display:flex; align-items:center; gap:8px; background:var(--accent); border:none; border-radius:var(--rs); color:#fff; font-family:var(--font); font-size:14px; font-weight:500; padding:12px 24px; cursor:pointer; }
+  #scan-idle-btn:hover { opacity:.85; }
+  .bc-found { display:none; align-items:center; gap:10px; margin-top:12px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); padding:10px 14px; }
+  .bc-code { font-family:var(--mono); font-size:13px; color:var(--accent2); flex:1; }
+  .bc-clear { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:2px 6px; }
 
-  header { text-align: center; margin-bottom: 28px; }
+  /* FOTO */
+  #drop-zone { border:1.5px dashed var(--border); border-radius:var(--rs); padding:28px 16px; text-align:center; cursor:pointer; transition:border-color .2s,background .2s; }
+  #drop-zone:hover { border-color:var(--accent); background:var(--accent-soft); }
+  #drop-zone .icon { font-size:28px; margin-bottom:6px; opacity:.7; }
+  #drop-zone p { font-size:13px; color:var(--muted); }
+  #drop-zone strong { color:var(--accent); }
+  #file-input { display:none; }
+  #preview-wrap { display:none; position:relative; }
+  #preview-img { width:100%; border-radius:var(--rs); display:block; max-height:240px; object-fit:cover; }
+  .remove-btn { position:absolute; top:8px; right:8px; background:#000a; border:none; border-radius:99px; color:#fff; font-size:12px; padding:4px 10px; cursor:pointer; }
 
-  .logo-tag {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--accent-soft); border: 1px solid #7c6af733;
-    border-radius: 99px; padding: 4px 14px;
-    font-size: 11px; color: var(--accent);
-    letter-spacing: .08em; text-transform: uppercase;
-    margin-bottom: 12px; font-weight: 500;
-  }
+  /* INPUTS */
+  input[type=text], textarea { background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:14px; padding:10px 13px; width:100%; transition:border-color .2s; }
+  input[type=text]:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  input[type=text]::placeholder, textarea::placeholder { color:var(--muted); }
+  textarea#description { resize:none; height:84px; line-height:1.6; }
 
-  header h1 { font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
-  header p { color: var(--muted); font-size: 13px; margin-top: 5px; }
+  /* MIC */
+  .mic-row { display:flex; align-items:center; gap:10px; margin-top:10px; }
+  #mic-btn { display:flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:99px; color:var(--muted); font-family:var(--font); font-size:12px; padding:7px 16px; cursor:pointer; transition:all .2s; white-space:nowrap; }
+  #mic-btn:hover { border-color:var(--accent); color:var(--accent); }
+  #mic-btn.recording { border-color:var(--danger); color:var(--danger); background:#f8717111; animation:pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 #f8717133} 50%{box-shadow:0 0 0 5px #f8717100} }
+  .mic-hint { font-size:11px; color:var(--muted); }
 
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 20px;
-    width: 100%; max-width: 520px; margin-bottom: 14px;
-  }
+  /* BOTÓN PRINCIPAL */
+  #analyze-btn { width:100%; max-width:520px; background:var(--accent); border:none; border-radius:var(--rs); color:#fff; font-family:var(--font); font-size:15px; font-weight:500; padding:14px; cursor:pointer; transition:opacity .2s,transform .1s; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px; }
+  #analyze-btn:disabled { opacity:.4; cursor:not-allowed; }
+  #analyze-btn:not(:disabled):hover { opacity:.88; }
+  #analyze-btn:not(:disabled):active { transform:scale(.98); }
+  .spinner { width:16px; height:16px; border:2px solid #ffffff44; border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none; }
+  @keyframes spin { to{transform:rotate(360deg)} }
 
-  .card-title {
-    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--muted); font-weight: 500; margin-bottom: 14px;
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  .card-title .dot {
-    width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0;
-  }
-
-  /* ── TABS de entrada ── */
-  .input-tabs {
-    display: flex; gap: 6px; margin-bottom: 14px;
-  }
-
-  .tab-btn {
-    flex: 1; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--rs); color: var(--muted); font-family: var(--font);
-    font-size: 12px; font-weight: 500; padding: 9px 6px; cursor: pointer;
-    transition: all .18s; text-align: center;
-  }
-
-  .tab-btn.active {
-    background: var(--accent-soft); border-color: var(--accent); color: var(--accent);
-  }
-
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* ── FOTO ── */
-  #drop-zone {
-    border: 1.5px dashed var(--border); border-radius: var(--rs);
-    padding: 28px 16px; text-align: center; cursor: pointer;
-    transition: border-color .2s, background .2s;
-  }
-
-  #drop-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
-  #drop-zone .icon { font-size: 28px; margin-bottom: 6px; opacity: .7; }
-  #drop-zone p { font-size: 13px; color: var(--muted); }
-  #drop-zone strong { color: var(--accent); }
-  #file-input { display: none; }
-
-  #preview-wrap { display: none; position: relative; }
-  #preview-img { width: 100%; border-radius: var(--rs); display: block; max-height: 240px; object-fit: cover; }
-  .remove-btn {
-    position: absolute; top: 8px; right: 8px;
-    background: #000a; border: none; border-radius: 99px;
-    color: #fff; font-size: 12px; padding: 4px 10px; cursor: pointer;
-  }
-
-  /* ── SCANNER ── */
-  #scanner-wrap {
-    position: relative; border-radius: var(--rs); overflow: hidden;
-    background: #000; width: 100%; aspect-ratio: 4/3;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-  }
-
-  #scanner-video {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-  }
-
-  .scan-overlay {
-    position: absolute; inset: 0; pointer-events: none;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  .scan-frame {
-    width: 70%; max-width: 260px; height: 110px;
-    border: 2px solid var(--accent2);
-    border-radius: 10px; position: relative;
-  }
-
-  .scan-line {
-    position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: var(--accent2); opacity: .8;
-    animation: scan-move 1.8s ease-in-out infinite;
-  }
-
-  @keyframes scan-move {
-    0%   { top: 4px; }
-    50%  { top: calc(100% - 6px); }
-    100% { top: 4px; }
-  }
-
-  .scan-corner {
-    position: absolute; width: 16px; height: 16px;
-    border-color: var(--accent2); border-style: solid; border-width: 0;
-  }
-  .scan-corner.tl { top: -2px; left: -2px; border-top-width: 3px; border-left-width: 3px; border-radius: 4px 0 0 0; }
-  .scan-corner.tr { top: -2px; right: -2px; border-top-width: 3px; border-right-width: 3px; border-radius: 0 4px 0 0; }
-  .scan-corner.bl { bottom: -2px; left: -2px; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 4px; }
-  .scan-corner.br { bottom: -2px; right: -2px; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 4px 0; }
-
-  #scan-status {
-    position: absolute; bottom: 10px; left: 0; right: 0;
-    text-align: center; font-size: 12px; color: #ffffffcc;
-    font-family: var(--mono);
-  }
-
-  #scan-start-btn {
-    background: var(--accent); border: none; border-radius: var(--rs);
-    color: #fff; font-family: var(--font); font-size: 14px; font-weight: 500;
-    padding: 12px 24px; cursor: pointer; transition: opacity .2s;
-    display: flex; align-items: center; gap: 8px; margin: 0 auto;
-  }
-
-  #scan-start-btn:hover { opacity: .85; }
-
-  .barcode-result {
-    display: none; align-items: center; gap: 10px; margin-top: 12px;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--rs); padding: 10px 14px;
-  }
-
-  .barcode-result .bc-icon { font-size: 20px; }
-  .barcode-result .bc-code { font-family: var(--mono); font-size: 13px; color: var(--accent2); flex: 1; }
-  .barcode-clear { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px; }
-
-  /* ── MANUAL ── */
-  .manual-row { display: flex; gap: 8px; }
-
-  input[type=text], textarea {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--rs); color: var(--text); font-family: var(--font);
-    font-size: 14px; padding: 10px 13px; width: 100%; transition: border-color .2s;
-  }
-
-  input[type=text]:focus, textarea:focus { outline: none; border-color: var(--accent); }
-  input[type=text]::placeholder, textarea::placeholder { color: var(--muted); }
-
-  /* ── DESCRIPCIÓN ── */
-  textarea#description { resize: none; height: 84px; line-height: 1.6; }
-
-  .mic-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-
-  #mic-btn {
-    display: flex; align-items: center; gap: 6px;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 99px; color: var(--muted); font-family: var(--font);
-    font-size: 12px; padding: 7px 16px; cursor: pointer; transition: all .2s;
-    white-space: nowrap;
-  }
-
-  #mic-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  #mic-btn.recording {
-    border-color: var(--danger); color: var(--danger); background: #f8717111;
-    animation: pulse-border 1s ease-in-out infinite;
-  }
-
-  @keyframes pulse-border {
-    0%, 100% { box-shadow: 0 0 0 0 #f8717133; }
-    50%       { box-shadow: 0 0 0 5px #f8717100; }
-  }
-
-  .mic-hint { font-size: 11px; color: var(--muted); }
-
-  /* ── BOTÓN PRINCIPAL ── */
-  #analyze-btn {
-    width: 100%; max-width: 520px;
-    background: var(--accent); border: none; border-radius: var(--rs);
-    color: #fff; font-family: var(--font); font-size: 15px; font-weight: 500;
-    padding: 14px; cursor: pointer; transition: opacity .2s, transform .1s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-bottom: 14px;
-  }
-
-  #analyze-btn:disabled { opacity: .4; cursor: not-allowed; }
-  #analyze-btn:not(:disabled):hover { opacity: .88; }
-  #analyze-btn:not(:disabled):active { transform: scale(.98); }
-
-  .spinner {
-    width: 16px; height: 16px; border: 2px solid #ffffff44;
-    border-top-color: #fff; border-radius: 50%;
-    animation: spin .7s linear infinite; display: none;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── RESULTADO ── */
-  #result-card { display: none; width: 100%; max-width: 520px; }
-
-  .result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-
-  .result-title {
-    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--accent2); font-weight: 500;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .result-title::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); }
-
-  .edit-all-btn {
-    background: none; border: 1px solid var(--border); border-radius: 99px;
-    color: var(--muted); font-family: var(--font); font-size: 11px;
-    padding: 4px 12px; cursor: pointer; transition: all .15s;
-  }
-  .edit-all-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .fields-grid { display: grid; gap: 11px; }
-
-  .field-row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; align-items: start; }
-
-  .field-label {
-    font-size: 11px; color: var(--muted); text-transform: uppercase;
-    letter-spacing: .06em; padding-top: 10px; font-weight: 500;
-  }
-
-  .field-value {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--rs); color: var(--text); font-family: var(--font);
-    font-size: 14px; padding: 8px 12px; width: 100%; transition: border-color .2s;
-  }
-  .field-value:focus { outline: none; border-color: var(--accent); }
-  textarea.field-value { resize: vertical; min-height: 68px; line-height: 1.55; }
-
-  .price-row { display: flex; gap: 8px; }
-  .price-row .field-value { flex: 1; }
-  .price-row .field-value.iva { max-width: 96px; font-size: 12px; }
-
-  .tags-wrap {
-    display: flex; flex-wrap: wrap; gap: 5px;
-    padding: 7px 10px; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: var(--rs);
-    min-height: 36px; align-items: center;
-  }
-
-  .tag {
-    background: var(--accent-soft); border: 1px solid #7c6af733;
-    color: var(--accent); border-radius: 99px; font-size: 11px;
-    padding: 2px 9px; font-weight: 500;
-  }
-
-  .divider { height: 1px; background: var(--border); margin: 18px 0; }
-
-  .action-row { display: flex; gap: 10px; }
-
-  .btn-save {
-    flex: 1; background: var(--accent2); border: none; border-radius: var(--rs);
-    color: #0a1f15; font-family: var(--font); font-size: 14px; font-weight: 600;
-    padding: 12px; cursor: pointer; transition: opacity .2s;
-  }
-  .btn-save:hover { opacity: .85; }
-
-  .btn-retry {
-    background: none; border: 1px solid var(--border); border-radius: var(--rs);
-    color: var(--muted); font-family: var(--font); font-size: 14px;
-    padding: 12px 18px; cursor: pointer; transition: all .2s;
-  }
-  .btn-retry:hover { border-color: var(--accent); color: var(--accent); }
-
-  .confidence-bar { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
-  .conf-label { font-size: 11px; color: var(--muted); }
-  .conf-track { flex: 1; height: 4px; background: var(--border); border-radius: 99px; overflow: hidden; }
-  .conf-fill { height: 100%; background: var(--accent2); border-radius: 99px; transition: width .6s ease; width: 0%; }
-  .conf-pct { font-size: 11px; font-family: var(--mono); color: var(--accent2); min-width: 32px; }
-
-  .error-msg {
-    display: none; background: #f8717111; border: 1px solid #f8717144;
-    border-radius: var(--rs); color: var(--danger); font-size: 13px;
-    padding: 11px 14px; margin-bottom: 12px; width: 100%; max-width: 520px;
-  }
-
-  .info-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: #fbbf2415; border: 1px solid #fbbf2433;
-    border-radius: 99px; color: var(--warn); font-size: 11px;
-    padding: 3px 10px; margin-bottom: 10px;
-  }
+  /* RESULTADO */
+  #result-card { display:none; width:100%; max-width:520px; }
+  .result-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .result-title { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent2); font-weight:500; display:flex; align-items:center; gap:8px; }
+  .result-title::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent2); }
+  .edit-all-btn { background:none; border:1px solid var(--border); border-radius:99px; color:var(--muted); font-family:var(--font); font-size:11px; padding:4px 12px; cursor:pointer; transition:all .15s; }
+  .edit-all-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .fields-grid { display:grid; gap:11px; }
+  .field-row { display:grid; grid-template-columns:120px 1fr; gap:8px; align-items:start; }
+  .field-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; padding-top:10px; font-weight:500; }
+  .field-value { background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:14px; padding:8px 12px; width:100%; transition:border-color .2s; }
+  .field-value:focus { outline:none; border-color:var(--accent); }
+  textarea.field-value { resize:vertical; min-height:68px; line-height:1.55; }
+  .price-row { display:flex; gap:8px; }
+  .price-row .field-value { flex:1; }
+  .price-row .field-value.iva { max-width:96px; font-size:12px; }
+  .tags-wrap { display:flex; flex-wrap:wrap; gap:5px; padding:7px 10px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); min-height:36px; align-items:center; }
+  .tag { background:var(--accent-soft); border:1px solid #7c6af733; color:var(--accent); border-radius:99px; font-size:11px; padding:2px 9px; font-weight:500; }
+  .divider { height:1px; background:var(--border); margin:18px 0; }
+  .action-row { display:flex; gap:10px; }
+  .btn-save { flex:1; background:var(--accent2); border:none; border-radius:var(--rs); color:#0a1f15; font-family:var(--font); font-size:14px; font-weight:600; padding:12px; cursor:pointer; transition:opacity .2s; }
+  .btn-save:hover { opacity:.85; }
+  .btn-retry { background:none; border:1px solid var(--border); border-radius:var(--rs); color:var(--muted); font-family:var(--font); font-size:14px; padding:12px 18px; cursor:pointer; transition:all .2s; }
+  .btn-retry:hover { border-color:var(--accent); color:var(--accent); }
+  .confidence-bar { display:flex; align-items:center; gap:10px; margin-top:14px; }
+  .conf-label { font-size:11px; color:var(--muted); }
+  .conf-track { flex:1; height:4px; background:var(--border); border-radius:99px; overflow:hidden; }
+  .conf-fill { height:100%; background:var(--accent2); border-radius:99px; transition:width .6s ease; width:0%; }
+  .conf-pct { font-size:11px; font-family:var(--mono); color:var(--accent2); min-width:32px; }
+  .error-msg { display:none; background:#f8717111; border:1px solid #f8717144; border-radius:var(--rs); color:var(--danger); font-size:13px; padding:11px 14px; margin-bottom:12px; width:100%; max-width:520px; }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo-tag">POS Argentina · v2</div>
+  <div class="logo-tag">POS Argentina · v3</div>
   <h1>Carga de producto</h1>
   <p>Escaneá, fotografiá o dictá — la IA completa la ficha.</p>
 </header>
 
-<!-- PASO 1: ENTRADA -->
 <div class="card">
   <div class="card-title"><span class="dot"></span>1 · Identificación del producto</div>
-
   <div class="input-tabs">
     <button class="tab-btn active" onclick="switchTab('barcode')">📷 Escanear código</button>
-    <button class="tab-btn" onclick="switchTab('photo')">🖼 Foto del producto</button>
+    <button class="tab-btn" onclick="switchTab('photo')">🖼 Foto</button>
     <button class="tab-btn" onclick="switchTab('manual')">⌨ Manual</button>
   </div>
 
-  <!-- TAB: CÓDIGO DE BARRAS -->
+  <!-- TAB SCANNER -->
   <div class="tab-panel active" id="tab-barcode">
-    <div id="scanner-wrap">
-      <div id="scan-idle" style="text-align:center; padding: 20px;">
-        <button id="scan-start-btn" onclick="startScanner()">
-          <span>📷</span> Activar cámara
-        </button>
-        <p style="font-size:12px; color:var(--muted); margin-top:12px;">Apuntá al código de barras o QR del producto</p>
+    <div id="scanner-container">
+      <div id="scan-idle">
+        <button id="scan-idle-btn" onclick="startScanner()">📷 Activar cámara</button>
+        <p style="font-size:12px;color:#ffffff88;margin-top:10px;text-align:center;">Apuntá al código de barras del producto</p>
       </div>
       <video id="scanner-video" style="display:none;" playsinline autoplay muted></video>
-      <div class="scan-overlay" id="scan-overlay" style="display:none;">
-        <div class="scan-frame">
+      <canvas id="scanner-canvas"></canvas>
+      <div class="scan-ui" id="scan-ui" style="display:none;">
+        <div class="scan-box">
           <div class="scan-line"></div>
-          <div class="scan-corner tl"></div>
-          <div class="scan-corner tr"></div>
-          <div class="scan-corner bl"></div>
-          <div class="scan-corner br"></div>
+          <div class="sc tl"></div><div class="sc tr"></div>
+          <div class="sc bl"></div><div class="sc br"></div>
         </div>
       </div>
-      <div id="scan-status" style="display:none;">Buscando código...</div>
+      <div id="scan-msg" style="display:none;">Buscando código...</div>
     </div>
-
-    <div class="barcode-result" id="barcode-result">
-      <span class="bc-icon">⬛</span>
-      <span class="bc-code" id="bc-code-text">—</span>
-      <button class="barcode-clear" onclick="clearBarcode()" title="Quitar">✕</button>
+    <div class="bc-found" id="bc-found">
+      <span style="font-size:20px;">⬛</span>
+      <span class="bc-code" id="bc-text">—</span>
+      <button class="bc-clear" onclick="clearBarcode()">✕</button>
     </div>
   </div>
 
-  <!-- TAB: FOTO -->
+  <!-- TAB FOTO -->
   <div class="tab-panel" id="tab-photo">
     <div id="drop-zone" onclick="document.getElementById('file-input').click()">
       <div class="icon">📷</div>
@@ -388,19 +167,16 @@
     <input type="file" id="file-input" accept="image/*" capture="environment">
   </div>
 
-  <!-- TAB: MANUAL -->
+  <!-- TAB MANUAL -->
   <div class="tab-panel" id="tab-manual">
-    <div class="manual-row">
-      <input type="text" id="manual-code" placeholder="Código de barras (EAN, UPC, ISBN…)" style="flex:1;">
-    </div>
-    <p style="font-size:11px; color:var(--muted); margin-top:8px;">También podés ingresar el nombre o modelo directamente en el campo de descripción.</p>
+    <input type="text" id="manual-code" placeholder="Código de barras (EAN, UPC, ISBN…)">
+    <p style="font-size:11px;color:var(--muted);margin-top:8px;">O completá la descripción abajo y la IA genera la ficha.</p>
   </div>
 </div>
 
-<!-- PASO 2: DESCRIPCIÓN -->
 <div class="card">
   <div class="card-title"><span class="dot"></span>2 · Descripción adicional (opcional)</div>
-  <textarea id="description" placeholder="Ej: auriculares Sony WH-1000XM5, color negro, inalámbrico, noise cancelling…"></textarea>
+  <textarea id="description" placeholder="Ej: crema corporal Nivea 400ml hidratante piel seca…"></textarea>
   <div class="mic-row">
     <button id="mic-btn" onclick="toggleMic()">🎤 Dictar</button>
     <span class="mic-hint" id="mic-hint">Hablá después de presionar</span>
@@ -414,42 +190,19 @@
   <span id="btn-text">✦ Generar ficha con IA</span>
 </button>
 
-<!-- RESULTADO -->
 <div class="card" id="result-card">
   <div class="result-header">
     <div class="result-title">Ficha generada</div>
     <button class="edit-all-btn" onclick="document.getElementById('f-nombre').focus()">Editar</button>
   </div>
-
   <div class="fields-grid">
-    <div class="field-row">
-      <div class="field-label">Nombre</div>
-      <input class="field-value" type="text" id="f-nombre">
-    </div>
-    <div class="field-row">
-      <div class="field-label">Marca</div>
-      <input class="field-value" type="text" id="f-marca">
-    </div>
-    <div class="field-row">
-      <div class="field-label">Modelo</div>
-      <input class="field-value" type="text" id="f-modelo">
-    </div>
-    <div class="field-row">
-      <div class="field-label">Categoría</div>
-      <input class="field-value" type="text" id="f-categoria">
-    </div>
-    <div class="field-row">
-      <div class="field-label">Descripción</div>
-      <textarea class="field-value" id="f-descripcion"></textarea>
-    </div>
-    <div class="field-row">
-      <div class="field-label">Cód. barras</div>
-      <input class="field-value" type="text" id="f-barcode" style="font-family:var(--mono);font-size:13px;">
-    </div>
-    <div class="field-row">
-      <div class="field-label">SKU</div>
-      <input class="field-value" type="text" id="f-sku">
-    </div>
+    <div class="field-row"><div class="field-label">Nombre</div><input class="field-value" type="text" id="f-nombre"></div>
+    <div class="field-row"><div class="field-label">Marca</div><input class="field-value" type="text" id="f-marca"></div>
+    <div class="field-row"><div class="field-label">Modelo</div><input class="field-value" type="text" id="f-modelo"></div>
+    <div class="field-row"><div class="field-label">Categoría</div><input class="field-value" type="text" id="f-categoria"></div>
+    <div class="field-row"><div class="field-label">Descripción</div><textarea class="field-value" id="f-descripcion"></textarea></div>
+    <div class="field-row"><div class="field-label">Cód. barras</div><input class="field-value" type="text" id="f-barcode" style="font-family:var(--mono);font-size:13px;"></div>
+    <div class="field-row"><div class="field-label">SKU</div><input class="field-value" type="text" id="f-sku"></div>
     <div class="field-row">
       <div class="field-label">Precio</div>
       <div class="price-row">
@@ -457,151 +210,158 @@
         <input class="field-value iva" type="text" id="f-iva">
       </div>
     </div>
-    <div class="field-row">
-      <div class="field-label">Unidad</div>
-      <input class="field-value" type="text" id="f-unidad">
-    </div>
-    <div class="field-row">
-      <div class="field-label">Palabras clave</div>
-      <div class="tags-wrap" id="f-tags"></div>
-    </div>
-    <div class="field-row">
-      <div class="field-label">Observaciones</div>
-      <textarea class="field-value" id="f-obs" style="min-height:52px;"></textarea>
-    </div>
+    <div class="field-row"><div class="field-label">Unidad</div><input class="field-value" type="text" id="f-unidad"></div>
+    <div class="field-row"><div class="field-label">Palabras clave</div><div class="tags-wrap" id="f-tags"></div></div>
+    <div class="field-row"><div class="field-label">Observaciones</div><textarea class="field-value" id="f-obs" style="min-height:52px;"></textarea></div>
   </div>
-
   <div class="confidence-bar">
     <span class="conf-label">Confianza IA</span>
     <div class="conf-track"><div class="conf-fill" id="conf-fill"></div></div>
     <span class="conf-pct" id="conf-pct">—</span>
   </div>
-
   <div class="divider"></div>
-
   <div class="action-row">
     <button class="btn-save" onclick="saveProduct()">Guardar producto</button>
     <button class="btn-retry" onclick="resetAll()">Nueva carga</button>
   </div>
 </div>
 
-<!-- ZXing para lectura de códigos de barras -->
-<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
-
 <script>
 // ── Estado
 let imageBase64 = null;
 let scannedBarcode = null;
-let codeReader = null;
-let activeStream = null;
+let scanStream = null;
+let scanInterval = null;
 let recognition = null;
 let isRecording = false;
-let activeTab = 'barcode';
 
 // ── TABS
 function switchTab(tab) {
-  activeTab = tab;
-  document.querySelectorAll('.tab-btn').forEach((b, i) => {
-    b.classList.toggle('active', ['barcode','photo','manual'][i] === tab);
+  ['barcode','photo','manual'].forEach((t,i) => {
+    document.querySelectorAll('.tab-btn')[i].classList.toggle('active', t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
   if (tab !== 'barcode') stopScanner();
 }
 
-// ── SCANNER DE CÓDIGO DE BARRAS
+// ── SCANNER con getUserMedia + BarcodeDetector (nativo) o canvas fallback
 async function startScanner() {
-  if (!window.ZXing) { showError('Librería de escaneo no cargó. Revisá tu conexión.'); return; }
-
+  hideError();
   try {
-    document.getElementById('scan-idle').style.display = 'none';
-    const video = document.getElementById('scanner-video');
-    video.style.display = 'block';
-    document.getElementById('scan-overlay').style.display = 'flex';
-    document.getElementById('scan-status').style.display = 'block';
-
-    const hints = new Map();
-    const formats = [
-      ZXing.BarcodeFormat.EAN_13,
-      ZXing.BarcodeFormat.EAN_8,
-      ZXing.BarcodeFormat.CODE_128,
-      ZXing.BarcodeFormat.CODE_39,
-      ZXing.BarcodeFormat.QR_CODE,
-      ZXing.BarcodeFormat.UPC_A,
-      ZXing.BarcodeFormat.UPC_E,
-      ZXing.BarcodeFormat.ITF,
-      ZXing.BarcodeFormat.DATA_MATRIX,
-    ];
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-
-    codeReader = new ZXing.BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 200 });
-
-    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
-    // Preferir cámara trasera
-    const backCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length - 1];
-    const deviceId = backCam ? backCam.deviceId : undefined;
-
-    codeReader.decodeFromVideoDevice(deviceId, video, (result, err) => {
-      if (result) {
-        const code = result.getText();
-        onBarcodeDetected(code);
+    // Pedir cámara trasera explícitamente
+    const constraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
       }
-    });
+    };
 
-  } catch(e) {
-    showError('No se pudo acceder a la cámara. Permití el acceso en tu navegador.');
-    resetScannerUI();
+    scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const video = document.getElementById('scanner-video');
+    video.srcObject = scanStream;
+    await video.play();
+
+    document.getElementById('scan-idle').style.display = 'none';
+    video.style.display = 'block';
+    document.getElementById('scan-ui').style.display = 'flex';
+    document.getElementById('scan-msg').style.display = 'block';
+
+    // Intentar BarcodeDetector nativo (Chrome Android lo soporta)
+    if ('BarcodeDetector' in window) {
+      const detector = new BarcodeDetector({
+        formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf','data_matrix','aztec','pdf417']
+      });
+      scanInterval = setInterval(async () => {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          try {
+            const barcodes = await detector.detect(video);
+            if (barcodes.length > 0) {
+              onBarcodeFound(barcodes[0].rawValue);
+            }
+          } catch(e) {}
+        }
+      }, 300);
+    } else {
+      // Fallback: ZXing via CDN
+      loadZXing();
+    }
+
+  } catch(err) {
+    console.error(err);
+    if (err.name === 'NotAllowedError') {
+      showError('Permiso de cámara denegado. Tocá el candado 🔒 en la barra de la URL → Permisos → Cámara → Permitir, y recargá.');
+    } else if (err.name === 'NotFoundError') {
+      showError('No se encontró cámara en este dispositivo.');
+    } else {
+      showError('No se pudo iniciar la cámara: ' + err.message);
+    }
+    resetScanUI();
   }
 }
 
-function onBarcodeDetected(code) {
+function loadZXing() {
+  if (window._zxingLoading) return;
+  window._zxingLoading = true;
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js';
+  s.onload = () => {
+    const video = document.getElementById('scanner-video');
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    const reader = new ZXing.BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 250 });
+    window._zxingReader = reader;
+    reader.decodeFromVideoElement(video, (result, err) => {
+      if (result) onBarcodeFound(result.getText());
+    });
+  };
+  s.onerror = () => showError('No se pudo cargar el lector. Usá el ingreso manual.');
+  document.head.appendChild(s);
+}
+
+function onBarcodeFound(code) {
   stopScanner();
   scannedBarcode = code;
-
-  document.getElementById('bc-code-text').textContent = code;
-  document.getElementById('barcode-result').style.display = 'flex';
-  document.getElementById('scan-status').style.display = 'none';
-
-  // Vibrar si está disponible
-  if (navigator.vibrate) navigator.vibrate(80);
+  document.getElementById('bc-text').textContent = code;
+  document.getElementById('bc-found').style.display = 'flex';
+  if (navigator.vibrate) navigator.vibrate(100);
 }
 
 function stopScanner() {
-  if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
-  resetScannerUI();
+  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+  if (window._zxingReader) { try { window._zxingReader.reset(); } catch(e){} window._zxingReader = null; window._zxingLoading = false; }
+  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+  resetScanUI();
 }
 
-function resetScannerUI() {
-  const video = document.getElementById('scanner-video');
-  video.style.display = 'none';
-  document.getElementById('scan-overlay').style.display = 'none';
-  document.getElementById('scan-status').style.display = 'none';
-  document.getElementById('scan-idle').style.display = 'block';
+function resetScanUI() {
+  const v = document.getElementById('scanner-video');
+  v.style.display = 'none'; v.srcObject = null;
+  document.getElementById('scan-ui').style.display = 'none';
+  document.getElementById('scan-msg').style.display = 'none';
+  document.getElementById('scan-idle').style.display = 'flex';
 }
 
 function clearBarcode() {
   scannedBarcode = null;
-  document.getElementById('barcode-result').style.display = 'none';
-  document.getElementById('bc-code-text').textContent = '—';
+  document.getElementById('bc-found').style.display = 'none';
+  document.getElementById('bc-text').textContent = '—';
 }
 
 // ── FOTO
 document.getElementById('file-input').addEventListener('change', e => {
   const file = e.target.files[0];
-  if (file) loadImage(file);
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      imageBase64 = ev.target.result.split(',')[1];
+      document.getElementById('preview-img').src = ev.target.result;
+      document.getElementById('drop-zone').style.display = 'none';
+      document.getElementById('preview-wrap').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
 });
-
-function loadImage(file) {
-  const reader = new FileReader();
-  reader.onload = ev => {
-    imageBase64 = ev.target.result.split(',')[1];
-    document.getElementById('preview-img').src = ev.target.result;
-    document.getElementById('drop-zone').style.display = 'none';
-    document.getElementById('preview-wrap').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
 
 function removeImage() {
   imageBase64 = null;
@@ -613,105 +373,84 @@ function removeImage() {
 // ── MICRÓFONO
 function toggleMic() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError('El dictado por voz requiere Chrome. Intentá desde Chrome en tu celular.'); return; }
-
+  if (!SR) { showError('El dictado requiere Chrome. Abrí la página desde Chrome en tu celular.'); return; }
   if (isRecording) { recognition && recognition.stop(); return; }
-
   recognition = new SR();
   recognition.lang = 'es-AR';
   recognition.continuous = false;
   recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
   recognition.onstart = () => {
     isRecording = true;
-    const btn = document.getElementById('mic-btn');
-    btn.classList.add('recording');
-    btn.innerHTML = '⏹ Detener';
+    document.getElementById('mic-btn').classList.add('recording');
+    document.getElementById('mic-btn').textContent = '⏹ Detener';
     document.getElementById('mic-hint').textContent = 'Escuchando...';
   };
-
   recognition.onresult = e => {
     const t = e.results[0][0].transcript;
     const ta = document.getElementById('description');
     ta.value = (ta.value ? ta.value + ' ' : '') + t;
   };
-
   recognition.onend = recognition.onerror = () => {
     isRecording = false;
-    const btn = document.getElementById('mic-btn');
-    btn.classList.remove('recording');
-    btn.innerHTML = '🎤 Dictar';
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('mic-btn').innerHTML = '🎤 Dictar';
     document.getElementById('mic-hint').textContent = 'Hablá después de presionar';
   };
-
   recognition.start();
 }
 
 // ── ANÁLISIS IA
 async function analyzeProduct() {
   const desc = document.getElementById('description').value.trim();
-  const manualCode = document.getElementById('manual-code').value.trim();
+  const manualCode = document.getElementById('manual-code') ? document.getElementById('manual-code').value.trim() : '';
   const barcode = scannedBarcode || manualCode;
 
   if (!imageBase64 && !barcode && !desc) {
     showError('Escaneá un código, tomá una foto o escribí una descripción del producto.');
     return;
   }
-
   hideError();
   setBusy(true);
 
   const content = [];
-
   if (imageBase64) {
-    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } });
+    content.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data:imageBase64 } });
   }
 
-  const barcodeInfo = barcode ? `\nCódigo de barras escaneado: ${barcode}` : '';
-  const descInfo = desc ? `\nDescripción del operador: "${desc}"` : '';
-
   const prompt = `Sos un asistente experto en gestión de inventario para negocios en Argentina.
-Analizá toda la información disponible y generá una ficha de producto completa.
-${barcodeInfo}${descInfo}
+Analizá la información disponible y generá una ficha de producto completa.
+${barcode ? `Código de barras escaneado: ${barcode}` : ''}
+${desc ? `Descripción del operador: "${desc}"` : ''}
+${barcode ? `Si reconocés el código "${barcode}", usá ese conocimiento para completar la ficha con precisión.` : ''}
 
-${barcode ? `El código de barras "${barcode}" puede corresponder a un producto conocido. Si lo reconocés, usá ese conocimiento para completar la ficha. Si no, generá la información basándote en la descripción y/o imagen.` : ''}
-
-Respondé ÚNICAMENTE con este JSON válido, sin markdown, sin explicaciones:
-
+Respondé ÚNICAMENTE con este JSON válido, sin markdown ni explicaciones:
 {
   "nombre": "nombre comercial completo",
-  "marca": "marca del fabricante",
+  "marca": "marca",
   "modelo": "modelo o referencia",
-  "categoria": "categoría del producto",
-  "descripcion": "descripción de venta en 2-3 oraciones, español rioplatense, orientada al comprador",
+  "categoria": "categoría",
+  "descripcion": "descripción de venta 2-3 oraciones en español rioplatense",
   "barcode": "${barcode || ''}",
-  "sku": "código SKU sugerido formato AAA-00000",
-  "precio_sugerido": "precio en pesos argentinos solo número sin símbolo ni puntos",
-  "alicuota_iva": "10.5 o 21 según corresponda en Argentina",
-  "unidad_venta": "Unidad / Par / Caja x12 / Kg / etc.",
-  "palabras_clave": ["keyword1", "keyword2", "keyword3"],
-  "observaciones": "garantía, origen, cuidados, alertas SENASA si aplica, etc.",
-  "confianza": número entre 55 y 99
+  "sku": "SKU sugerido formato AAA-00000",
+  "precio_sugerido": "número sin símbolo ni puntos",
+  "alicuota_iva": "10.5 o 21",
+  "unidad_venta": "Unidad / Par / Kg / etc.",
+  "palabras_clave": ["kw1","kw2","kw3"],
+  "observaciones": "garantía, origen, SENASA si aplica, etc.",
+  "confianza": número 55-99
 }`;
 
-  content.push({ type: 'text', text: prompt });
+  content.push({ type:'text', text:prompt });
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content }]
-      })
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content }] })
     });
-
     const data = await res.json();
-    const raw = data.content.map(b => b.text || '').join('');
-    const clean = raw.replace(/```json|```/g, '').trim();
-    const product = JSON.parse(clean);
+    const raw = data.content.map(b => b.text||'').join('');
+    const product = JSON.parse(raw.replace(/```json|```/g,'').trim());
     renderResult(product, barcode);
   } catch(err) {
     showError('No se pudo generar la ficha. Verificá tu conexión e intentá de nuevo.');
@@ -730,38 +469,32 @@ function renderResult(p, barcode) {
   document.getElementById('f-barcode').value    = barcode || p.barcode || '';
   document.getElementById('f-sku').value        = p.sku || '';
   document.getElementById('f-precio').value     = p.precio_sugerido ? '$ ' + Number(p.precio_sugerido).toLocaleString('es-AR') : '';
-  document.getElementById('f-iva').value        = p.alicuota_iva ? 'IVA ' + p.alicuota_iva + '%' : 'IVA 21%';
+  document.getElementById('f-iva').value        = 'IVA ' + (p.alicuota_iva||'21') + '%';
   document.getElementById('f-unidad').value     = p.unidad_venta || '';
   document.getElementById('f-obs').value        = p.observaciones || '';
-
   const tw = document.getElementById('f-tags');
   tw.innerHTML = '';
-  (p.palabras_clave || []).forEach(t => {
-    const s = document.createElement('span');
-    s.className = 'tag'; s.textContent = t; tw.appendChild(s);
-  });
-
-  const conf = Math.min(99, Math.max(55, parseInt(p.confianza) || 80));
-  document.getElementById('conf-fill').style.width = conf + '%';
-  document.getElementById('conf-pct').textContent  = conf + '%';
-
+  (p.palabras_clave||[]).forEach(t => { const s=document.createElement('span'); s.className='tag'; s.textContent=t; tw.appendChild(s); });
+  const conf = Math.min(99, Math.max(55, parseInt(p.confianza)||80));
+  document.getElementById('conf-fill').style.width = conf+'%';
+  document.getElementById('conf-pct').textContent  = conf+'%';
   const rc = document.getElementById('result-card');
   rc.style.display = 'block';
-  setTimeout(() => rc.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  setTimeout(() => rc.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
 }
 
 function saveProduct() {
-  const nombre = document.getElementById('f-nombre').value;
-  alert('✓ Producto "' + nombre + '" guardado.\n\n(En producción: POST /api/productos)');
+  const n = document.getElementById('f-nombre').value;
+  alert('✓ Producto "' + n + '" guardado.\n(En producción: POST /api/productos)');
 }
 
 function resetAll() {
   removeImage(); clearBarcode(); stopScanner();
   document.getElementById('description').value = '';
-  document.getElementById('manual-code').value = '';
+  if (document.getElementById('manual-code')) document.getElementById('manual-code').value = '';
   document.getElementById('result-card').style.display = 'none';
   hideError();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top:0, behavior:'smooth' });
 }
 
 function setBusy(b) {
@@ -770,12 +503,8 @@ function setBusy(b) {
   document.getElementById('btn-text').textContent = b ? 'Analizando…' : '✦ Generar ficha con IA';
 }
 
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg; el.style.display = 'block';
-}
-
-function hideError() { document.getElementById('error-msg').style.display = 'none'; }
+function showError(msg) { const e=document.getElementById('error-msg'); e.textContent=msg; e.style.display='block'; }
+function hideError() { document.getElementById('error-msg').style.display='none'; }
 </script>
 </body>
 </html>
