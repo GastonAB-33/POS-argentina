@@ -562,11 +562,113 @@ tbody tr:hover td{background:var(--surface2)}
 
     <!-- ══ POS ══ -->
     <div class="module" id="mod-pos">
-      <div class="coming-soon">
-        <div class="cs-icon">◈</div>
-        <div class="cs-badge">Módulo · Punto de venta</div>
-        <div class="cs-title">Punto de venta</div>
-        <div class="cs-sub">Caja rápida, búsqueda por código o nombre, múltiples medios de pago y emisión de comprobante al instante.</div>
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;height:calc(100vh - 112px);">
+
+        <!-- IZQ: buscador + carrito -->
+        <div style="display:flex;flex-direction:column;gap:14px;overflow:hidden;">
+          <div style="display:flex;gap:8px;">
+            <input id="pos-search" type="text" placeholder="Buscar producto por nombre o código…" oninput="posSearch()"
+              style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:14px;padding:11px 14px;outline:none;transition:border-color .2s;"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <button onclick="startPosScanner()" title="Escanear código"
+              style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:18px;padding:0 14px;cursor:pointer;transition:all .2s;"
+              onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">⬛</button>
+          </div>
+          <div id="pos-scanner-wrap" style="display:none;position:relative;border-radius:10px;overflow:hidden;background:#000;height:180px;">
+            <video id="pos-scan-video" style="width:100%;height:100%;object-fit:cover;" playsinline autoplay muted></video>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+              <div style="width:55%;height:70px;border:2px solid var(--success);border-radius:8px;position:relative;">
+                <div style="position:absolute;left:0;right:0;height:2px;background:var(--success);opacity:.85;animation:scanmove 1.8s ease-in-out infinite;"></div>
+              </div>
+            </div>
+            <button onclick="stopPosScanner()" style="position:absolute;top:8px;right:8px;background:#000a;border:none;border-radius:99px;color:#fff;font-size:12px;padding:5px 12px;cursor:pointer;">✕ Cerrar</button>
+            <div style="position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#ffffffcc;font-family:var(--mono);">Apuntá al código de barras…</div>
+          </div>
+          <div id="pos-results" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;max-height:200px;overflow-y:auto;"></div>
+          <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:10px;">Carrito</div>
+            <div id="pos-cart-empty" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;flex-direction:column;gap:8px;">
+              <div style="font-size:32px;opacity:.2;">◈</div>
+              <div>Buscá un producto para agregar</div>
+            </div>
+            <div id="pos-cart-list" style="flex:1;overflow-y:auto;display:none;"></div>
+          </div>
+        </div>
+
+        <!-- DER: resumen y cobro -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:8px;">Cliente</div>
+            <select id="pos-cliente" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:8px 10px;outline:none;">
+              <option value="">Consumidor final</option>
+            </select>
+          </div>
+          <div style="padding:16px;border-bottom:1px solid var(--border);flex:1;overflow-y:auto;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:12px;">Resumen</div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--muted);">Subtotal</span><span id="pos-subtotal" style="font-family:var(--mono);">$ 0</span></div>
+              <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--muted);">IVA</span><span id="pos-iva-total" style="font-family:var(--mono);">$ 0</span></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+                <span style="color:var(--muted);">Descuento</span>
+                <div style="display:flex;align-items:center;gap:5px;">
+                  <input id="pos-desc-pct" type="number" min="0" max="100" value="0" oninput="recalcTotals()"
+                    style="width:48px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;padding:3px 6px;outline:none;text-align:right;">
+                  <span style="font-size:12px;color:var(--muted);">%</span>
+                </div>
+              </div>
+              <div style="height:1px;background:var(--border);"></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;">
+                <span style="font-size:13px;font-weight:500;">Total</span>
+                <span id="pos-total" style="font-size:22px;font-weight:600;font-family:var(--mono);color:var(--success);">$ 0</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:8px;">Medio de pago</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                <button class="pay-btn active" data-pay="efectivo" onclick="selectPayment(this)">💵 Efectivo</button>
+                <button class="pay-btn" data-pay="tarjeta" onclick="selectPayment(this)">💳 Tarjeta</button>
+                <button class="pay-btn" data-pay="transferencia" onclick="selectPayment(this)">🏦 Transferencia</button>
+                <button class="pay-btn" data-pay="qr" onclick="selectPayment(this)">⬛ QR / MP</button>
+              </div>
+            </div>
+            <div id="pos-vuelto-wrap" style="margin-top:12px;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:6px;">Recibido</div>
+              <input id="pos-recibido" type="number" min="0" placeholder="$ 0" oninput="calcVuelto()"
+                style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:14px;padding:9px 12px;outline:none;">
+              <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;">
+                <span style="color:var(--muted);">Vuelto</span>
+                <span id="pos-vuelto" style="font-family:var(--mono);font-weight:500;color:var(--warn);">$ 0</span>
+              </div>
+            </div>
+          </div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px;">
+            <button onclick="cobrarVenta()"
+              style="background:var(--success);border:none;border-radius:8px;color:#0a1f15;font-family:var(--font);font-size:15px;font-weight:600;padding:14px;cursor:pointer;width:100%;">
+              ✓ Cobrar
+            </button>
+            <button onclick="cancelarVenta()"
+              style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:10px;cursor:pointer;width:100%;">
+              Cancelar venta
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL TICKET -->
+      <div id="pos-ticket-modal" style="display:none;position:fixed;inset:0;background:#000000aa;z-index:999;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:400px;width:100%;max-height:90vh;overflow-y:auto;">
+          <div style="padding:20px 20px 0;text-align:center;">
+            <div style="font-size:36px;color:var(--success);">✓</div>
+            <div style="font-size:16px;font-weight:600;margin-top:6px;">Venta registrada</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;" id="ticket-num">Comprobante #0001</div>
+          </div>
+          <div id="ticket-body" style="margin:16px 20px 0;background:var(--surface2);border-radius:8px;padding:14px;font-size:12px;line-height:1.9;font-family:var(--mono);white-space:pre;"></div>
+          <div style="padding:16px;display:flex;gap:8px;">
+            <button onclick="closePosTicket()" style="flex:1;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:14px;font-weight:500;padding:11px;cursor:pointer;">Nueva venta</button>
+            <button onclick="window.print()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:11px 16px;cursor:pointer;">Imprimir</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -965,6 +1067,240 @@ renderProductTable();
 
 // ══ FIN PRODUCTOS ══
 
+// ══ POS MODULE ══
+let posCart = [];
+let posPaymentMethod = 'efectivo';
+let posScanStream = null, posScanInterval = null;
+let ventaCounter = parseInt(localStorage.getItem('pos_venta_counter')||'0');
+
+// CSS para botones de pago y pay-btn
+document.head.insertAdjacentHTML('beforeend',`<style>
+.pay-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:12px;font-weight:500;padding:9px 6px;cursor:pointer;transition:all .18s;text-align:center;}
+.pay-btn:hover{border-color:var(--accent);color:var(--accent);}
+.pay-btn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+</style>`);
+
+function posSearch() {
+  const q = document.getElementById('pos-search').value.trim().toLowerCase();
+  const res = document.getElementById('pos-results');
+  if (!q) { res.style.display='none'; return; }
+  const found = productos.filter(p =>
+    (p.nombre+p.marca+p.modelo+p.sku+p.barcode).toLowerCase().includes(q)
+  ).slice(0, 8);
+  if (!found.length) { res.style.display='none'; return; }
+  res.style.display = 'block';
+  res.innerHTML = found.map(p => `
+    <div onclick="addToCart('${p.id}')"
+      style="padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;transition:background .15s;"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div>
+        <div style="font-size:13px;font-weight:500;">${p.nombre}</div>
+        <div style="font-size:11px;color:var(--muted);">${[p.marca,p.modelo].filter(Boolean).join(' · ')||''} ${p.sku?'· '+p.sku:''}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:13px;color:var(--success);font-weight:500;">${p.precio?'$ '+Number(p.precio).toLocaleString('es-AR'):'S/P'}</div>
+    </div>`).join('');
+}
+
+function addToCart(id) {
+  const p = productos.find(x=>x.id===id); if(!p) return;
+  const existing = posCart.find(x=>x.id===id);
+  if (existing) { existing.qty++; }
+  else { posCart.push({...p, qty:1}); }
+  document.getElementById('pos-search').value = '';
+  document.getElementById('pos-results').style.display = 'none';
+  renderCart();
+}
+
+function renderCart() {
+  const list = document.getElementById('pos-cart-list');
+  const empty = document.getElementById('pos-cart-empty');
+  if (!posCart.length) {
+    list.style.display='none'; empty.style.display='flex'; recalcTotals(); return;
+  }
+  empty.style.display='none'; list.style.display='block';
+  list.innerHTML = posCart.map((item,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;">${item.nombre}</div>
+        <div style="font-size:11px;color:var(--muted);">${item.precio?'$ '+Number(item.precio).toLocaleString('es-AR')+' c/u':''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button onclick="changeQty(${i},-1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);width:26px;height:26px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">−</button>
+        <span style="font-family:var(--mono);font-size:13px;min-width:20px;text-align:center;">${item.qty}</span>
+        <button onclick="changeQty(${i},1)" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);width:26px;height:26px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">+</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:500;min-width:70px;text-align:right;">
+        ${item.precio?'$ '+Number(item.precio*item.qty).toLocaleString('es-AR'):'—'}
+      </div>
+      <button onclick="removeFromCart(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;padding:0 2px;">✕</button>
+    </div>`).join('');
+  recalcTotals();
+}
+
+function changeQty(i, delta) {
+  posCart[i].qty += delta;
+  if (posCart[i].qty <= 0) posCart.splice(i,1);
+  renderCart();
+}
+
+function removeFromCart(i) { posCart.splice(i,1); renderCart(); }
+
+function recalcTotals() {
+  const descPct = parseFloat(document.getElementById('pos-desc-pct').value)||0;
+  let subtotal = 0, ivaTotal = 0;
+  posCart.forEach(item => {
+    if (!item.precio) return;
+    const precio = Number(item.precio);
+    const iva = parseFloat(item.iva)||21;
+    const base = precio / (1 + iva/100);
+    const ivaAmt = precio - base;
+    subtotal += base * item.qty;
+    ivaTotal += ivaAmt * item.qty;
+  });
+  const gross = subtotal + ivaTotal;
+  const descAmt = gross * descPct / 100;
+  const total = gross - descAmt;
+  document.getElementById('pos-subtotal').textContent  = '$ '+Math.round(subtotal).toLocaleString('es-AR');
+  document.getElementById('pos-iva-total').textContent = '$ '+Math.round(ivaTotal).toLocaleString('es-AR');
+  document.getElementById('pos-total').textContent     = '$ '+Math.round(total).toLocaleString('es-AR');
+  calcVuelto();
+}
+
+function selectPayment(btn) {
+  document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  posPaymentMethod = btn.dataset.pay;
+  document.getElementById('pos-vuelto-wrap').style.display = posPaymentMethod==='efectivo'?'block':'none';
+}
+
+function calcVuelto() {
+  const totalTxt = document.getElementById('pos-total').textContent.replace(/[^0-9]/g,'');
+  const total = parseInt(totalTxt)||0;
+  const recibido = parseInt(document.getElementById('pos-recibido').value)||0;
+  const vuelto = Math.max(0, recibido - total);
+  document.getElementById('pos-vuelto').textContent = '$ '+vuelto.toLocaleString('es-AR');
+}
+
+function cobrarVenta() {
+  if (!posCart.length) { alert('El carrito está vacío.'); return; }
+  const totalTxt = document.getElementById('pos-total').textContent.replace(/[^0-9]/g,'');
+  const total = parseInt(totalTxt)||0;
+  if (posPaymentMethod==='efectivo') {
+    const recibido = parseInt(document.getElementById('pos-recibido').value)||0;
+    if (recibido < total) { alert('El monto recibido es menor al total.'); return; }
+  }
+  ventaCounter++;
+  localStorage.setItem('pos_venta_counter', ventaCounter);
+  const numStr = String(ventaCounter).padStart(4,'0');
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-AR')+' '+now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  const cliente = document.getElementById('pos-cliente').value || 'Consumidor final';
+  const descPct = parseFloat(document.getElementById('pos-desc-pct').value)||0;
+  const payLabels = {efectivo:'Efectivo',tarjeta:'Tarjeta',transferencia:'Transferencia',qr:'QR / Mercado Pago'};
+
+  let lines = `Fecha:    ${fecha}
+Cliente:  ${cliente}
+Pago:     ${payLabels[posPaymentMethod]}
+`;
+  lines += '─'.repeat(34)+'
+';
+  posCart.forEach(item => {
+    const sub = item.precio ? Number(item.precio)*item.qty : 0;
+    lines += `${item.nombre.substring(0,22).padEnd(22)} x${item.qty}
+`;
+    if (item.precio) lines += `${''.padEnd(22)} $ ${Number(item.precio).toLocaleString('es-AR').padStart(10)}
+`;
+  });
+  lines += '─'.repeat(34)+'
+';
+  if (descPct > 0) lines += `Descuento ${descPct}%`.padEnd(24)+'$ -'+Math.round(total*descPct/100).toLocaleString('es-AR')+'
+';
+  lines += `TOTAL`.padEnd(24)+'$ '+total.toLocaleString('es-AR')+'
+';
+  if (posPaymentMethod==='efectivo') {
+    const recibido = parseInt(document.getElementById('pos-recibido').value)||0;
+    lines += `Recibido`.padEnd(24)+'$ '+recibido.toLocaleString('es-AR')+'
+';
+    lines += `Vuelto`.padEnd(24)+'$ '+(recibido-total).toLocaleString('es-AR')+'
+';
+  }
+
+  // Descontar stock
+  posCart.forEach(item => {
+    const p = productos.find(x=>x.id===item.id);
+    if (p && p.stock != null) { p.stock = Math.max(0, p.stock - item.qty); }
+  });
+  localStorage.setItem('pos_productos', JSON.stringify(productos));
+
+  // Guardar venta
+  const ventas = JSON.parse(localStorage.getItem('pos_ventas')||'[]');
+  ventas.unshift({ id:'V'+ventaCounter, num:numStr, fecha, cliente, items:[...posCart], total, pago:posPaymentMethod, descPct });
+  localStorage.setItem('pos_ventas', JSON.stringify(ventas));
+
+  document.getElementById('ticket-num').textContent = 'Comprobante #'+numStr;
+  document.getElementById('ticket-body').textContent = lines;
+  document.getElementById('pos-ticket-modal').style.display = 'flex';
+}
+
+function closePosTicket() {
+  document.getElementById('pos-ticket-modal').style.display = 'none';
+  cancelarVenta();
+}
+
+function cancelarVenta() {
+  posCart = [];
+  document.getElementById('pos-search').value = '';
+  document.getElementById('pos-results').style.display = 'none';
+  document.getElementById('pos-desc-pct').value = '0';
+  document.getElementById('pos-recibido').value = '';
+  document.getElementById('pos-vuelto').textContent = '$ 0';
+  document.querySelectorAll('.pay-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  posPaymentMethod = 'efectivo';
+  document.getElementById('pos-vuelto-wrap').style.display = 'block';
+  renderCart();
+}
+
+async function startPosScanner() {
+  const wrap = document.getElementById('pos-scanner-wrap');
+  wrap.style.display = 'block';
+  try {
+    posScanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+    const v = document.getElementById('pos-scan-video');
+    v.srcObject = posScanStream; await v.play();
+    if ('BarcodeDetector' in window) {
+      const det = new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e']});
+      posScanInterval = setInterval(async()=>{
+        if(v.readyState===v.HAVE_ENOUGH_DATA){
+          try{
+            const b=await det.detect(v);
+            if(b.length){
+              const code=b[0].rawValue;
+              stopPosScanner();
+              const p=productos.find(x=>x.barcode===code||x.sku===code);
+              if(p){addToCart(p.id);}
+              else{document.getElementById('pos-search').value=code;posSearch();}
+            }
+          }catch(e){}
+        }
+      },300);
+    }
+  } catch(e) { alert('No se pudo acceder a la cámara.'); stopPosScanner(); }
+}
+
+function stopPosScanner() {
+  if(posScanInterval){clearInterval(posScanInterval);posScanInterval=null;}
+  if(posScanStream){posScanStream.getTracks().forEach(t=>t.stop());posScanStream=null;}
+  document.getElementById('pos-scanner-wrap').style.display='none';
+}
+
+// cerrar resultados al hacer clic afuera
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#pos-results')&&!e.target.closest('#pos-search'))
+    document.getElementById('pos-results') && (document.getElementById('pos-results').style.display='none');
+});
+
+// ══ FIN POS ══
+
 const modules = {
   dashboard:     { title:'Dashboard',           sub:'Resumen general del negocio' },
   pos:           { title:'Punto de venta',       sub:'Caja y cobros' },
@@ -999,6 +1335,9 @@ function navigate(mod) {
   if (mod === 'productos') {
     actions.innerHTML = '<button class="btn btn-primary" onclick="showNewProduct()">+ Nuevo producto</button>';
     showListView();
+  } else if (mod === 'pos') {
+    actions.innerHTML = '<button class="btn btn-ghost" onclick="cancelarVenta()">🗑 Limpiar carrito</button>';
+    stopPosScanner();
   } else {
     actions.innerHTML = '';
   }
