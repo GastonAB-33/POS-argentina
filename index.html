@@ -2185,6 +2185,13 @@ function toggleSidebar() {
 
 // Responsive: colapsar sidebar en mobile
 if (window.innerWidth < 768) toggleSidebar();
+
+// ── INICIALIZACIÓN
+document.addEventListener('DOMContentLoaded', () => {
+  syncClientesAlPOS();
+  renderProductTable();
+  navigate('dashboard');
+});
 </script>
 </body>
 </html>
