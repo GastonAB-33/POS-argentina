@@ -349,11 +349,214 @@ tbody tr:hover td{background:var(--surface2)}
 
     <!-- ══ PRODUCTOS ══ -->
     <div class="module" id="mod-productos">
-      <div class="coming-soon">
-        <div class="cs-icon">⬡</div>
-        <div class="cs-badge">Módulo · Productos</div>
-        <div class="cs-title">Gestión de productos</div>
-        <div class="cs-sub">Catálogo completo, carga con IA + foto, códigos de barras, precios y stock por producto.</div>
+
+      <!-- VISTA: LISTADO -->
+      <div id="prod-list-view">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+          <input type="text" id="prod-search" placeholder="Buscar por nombre, marca, código…"
+            oninput="filterProducts()"
+            style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:9px 14px;outline:none;transition:border-color .2s;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+          <select id="prod-filter-cat" onchange="filterProducts()"
+            style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:9px 12px;outline:none;cursor:pointer;">
+            <option value="">Todas las categorías</option>
+            <option>Electrónica</option><option>Indumentaria</option>
+            <option>Alimentos</option><option>Higiene</option><option>Herramientas</option>
+          </select>
+          <button class="btn btn-primary" onclick="showNewProduct()">+ Nuevo producto</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="prod-table">
+            <thead>
+              <tr>
+                <th>Producto</th><th>Marca / Modelo</th><th>Categoría</th>
+                <th>SKU</th><th>Precio</th><th>IVA</th><th>Stock</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="prod-tbody"></tbody>
+          </table>
+        </div>
+        <div id="prod-empty" style="display:none;text-align:center;padding:48px;color:var(--muted);font-size:13px;">
+          No se encontraron productos. <span style="color:var(--accent);cursor:pointer;" onclick="showNewProduct()">Cargá el primero →</span>
+        </div>
+      </div>
+
+      <!-- VISTA: NUEVO / EDITAR PRODUCTO -->
+      <div id="prod-form-view" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+          <button onclick="showListView()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:7px 14px;cursor:pointer;">← Volver</button>
+          <div>
+            <div style="font-size:15px;font-weight:500;" id="form-view-title">Nuevo producto</div>
+            <div style="font-size:12px;color:var(--muted);">Fotografiá o escaneá para completar automáticamente</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:20px;align-items:start;" id="prod-form-grid">
+
+          <!-- COLUMNA IZQUIERDA: entrada -->
+          <div style="display:flex;flex-direction:column;gap:14px;">
+
+            <!-- Tabs -->
+            <div style="display:flex;gap:6px;">
+              <button class="ptab active" id="ptab-foto" onclick="switchPTab('foto')">📷 Foto</button>
+              <button class="ptab" id="ptab-scan" onclick="switchPTab('scan')">⬛ Escanear</button>
+              <button class="ptab" id="ptab-manual" onclick="switchPTab('manual')">⌨ Manual</button>
+            </div>
+
+            <!-- Tab foto -->
+            <div id="ptab-foto-panel">
+              <div id="p-dropzone" onclick="document.getElementById('p-file').click()"
+                style="border:1.5px dashed var(--border);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);"
+                onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--accent-soft)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+                <div style="font-size:28px;opacity:.5;margin-bottom:6px;">📷</div>
+                <div style="font-size:13px;font-weight:500;color:var(--accent);">Fotografiá el producto</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:3px;">La IA completa la ficha automáticamente</div>
+              </div>
+              <div id="p-preview-wrap" style="display:none;position:relative;">
+                <img id="p-preview-img" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover;display:block;">
+                <div id="p-analyzing" style="display:none;position:absolute;inset:0;background:#000c;border-radius:10px;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+                  <div style="width:44px;height:44px;border-radius:50%;border:3px solid #7c6af733;border-top-color:var(--accent);animation:spin .9s linear infinite;"></div>
+                  <div style="color:#fff;font-size:13px;font-weight:500;">Analizando imagen…</div>
+                </div>
+                <button onclick="clearPhoto()" style="position:absolute;top:8px;right:8px;background:#000a;border:none;border-radius:99px;color:#fff;font-size:12px;padding:4px 10px;cursor:pointer;">✕</button>
+              </div>
+              <input type="file" id="p-file" accept="image/*" capture="environment" style="display:none;">
+            </div>
+
+            <!-- Tab scan -->
+            <div id="ptab-scan-panel" style="display:none;">
+              <div id="p-scan-container" style="position:relative;background:#000;border-radius:10px;overflow:hidden;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;">
+                <div id="p-scan-idle" style="text-align:center;padding:20px;">
+                  <button onclick="startPScanner()"
+                    style="background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:14px;font-weight:500;padding:11px 22px;cursor:pointer;">
+                    📷 Activar cámara
+                  </button>
+                  <div style="font-size:11px;color:#ffffff66;margin-top:10px;">Apuntá al código de barras</div>
+                </div>
+                <video id="p-scan-video" style="display:none;width:100%;height:100%;object-fit:cover;" playsinline autoplay muted></video>
+                <div id="p-scan-ui" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;">
+                  <div style="width:65%;max-width:220px;height:90px;border:2px solid var(--success);border-radius:10px;position:relative;">
+                    <div style="position:absolute;left:0;right:0;height:2px;background:var(--success);opacity:.8;animation:scanmove 1.8s ease-in-out infinite;"></div>
+                  </div>
+                </div>
+                <div id="p-scan-msg" style="display:none;position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:11px;color:#ffffffcc;font-family:var(--mono);">Buscando código...</div>
+              </div>
+              <div id="p-bc-found" style="display:none;align-items:center;gap:10px;margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;">
+                <span style="font-size:18px;">⬛</span>
+                <span id="p-bc-text" style="font-family:var(--mono);font-size:13px;color:var(--success);flex:1;"></span>
+                <button onclick="clearPBarcode()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;">✕</button>
+              </div>
+            </div>
+
+            <!-- Tab manual -->
+            <div id="ptab-manual-panel" style="display:none;">
+              <input type="text" id="p-manual-code" placeholder="Código de barras (EAN, UPC…)"
+                style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:10px 13px;outline:none;">
+            </div>
+
+            <!-- Descripción adicional -->
+            <div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:6px;">Descripción adicional</div>
+              <textarea id="p-desc-extra" placeholder="Color, talle, detalles extra…"
+                style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:10px 13px;resize:none;height:72px;outline:none;line-height:1.6;"></textarea>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                <button id="p-mic-btn" onclick="togglePMic()"
+                  style="display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;color:var(--muted);font-family:var(--font);font-size:12px;padding:6px 14px;cursor:pointer;">
+                  🎤 Dictar
+                </button>
+                <span id="p-mic-hint" style="font-size:11px;color:var(--muted);">Hablá después de presionar</span>
+              </div>
+            </div>
+
+            <!-- Botón generar -->
+            <button id="p-gen-btn" onclick="generateProduct(false)"
+              style="width:100%;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:14px;font-weight:500;padding:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s;">
+              <span id="p-gen-spinner" style="display:none;width:14px;height:14px;border:2px solid #ffffff44;border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></span>
+              <span id="p-gen-text">✦ Generar ficha con IA</span>
+            </button>
+          </div>
+
+          <!-- COLUMNA DERECHA: ficha -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--success);font-weight:500;display:flex;align-items:center;gap:6px;">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block;"></span>
+                Ficha del producto
+              </div>
+              <div id="p-conf-wrap" style="display:none;align-items:center;gap:8px;">
+                <div style="font-size:11px;color:var(--muted);">IA</div>
+                <div style="width:80px;height:4px;background:var(--border);border-radius:99px;overflow:hidden;">
+                  <div id="p-conf-fill" style="height:100%;background:var(--success);border-radius:99px;transition:width .6s;width:0%;"></div>
+                </div>
+                <div id="p-conf-pct" style="font-size:11px;font-family:var(--mono);color:var(--success);min-width:28px;"></div>
+              </div>
+            </div>
+
+            <div style="display:grid;gap:10px;" id="p-fields">
+              <!-- nombre -->
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Nombre</div>
+                <input class="p-field" id="pf-nombre" type="text" placeholder="—">
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Marca</div>
+                <input class="p-field" id="pf-marca" type="text" placeholder="—">
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Modelo</div>
+                <input class="p-field" id="pf-modelo" type="text" placeholder="—">
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Categoría</div>
+                <input class="p-field" id="pf-categoria" type="text" placeholder="—">
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:start;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;padding-top:9px;">Descripción</div>
+                <textarea class="p-field" id="pf-desc" placeholder="—" style="resize:vertical;min-height:64px;line-height:1.55;"></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Cód. barras</div>
+                <input class="p-field" id="pf-barcode" type="text" placeholder="—" style="font-family:var(--mono);font-size:12px;">
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">SKU</div>
+                <input class="p-field" id="pf-sku" type="text" placeholder="—" style="font-family:var(--mono);font-size:12px;">
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Precio</div>
+                <div style="display:flex;gap:8px;">
+                  <input class="p-field" id="pf-precio" type="text" placeholder="$ —" style="flex:1;font-family:var(--mono);">
+                  <input class="p-field" id="pf-iva" type="text" placeholder="IVA 21%" style="width:90px;font-size:12px;">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Stock</div>
+                <input class="p-field" id="pf-stock" type="number" placeholder="0" min="0">
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:center;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;">Unidad</div>
+                <input class="p-field" id="pf-unidad" type="text" placeholder="Unidad">
+              </div>
+              <div style="display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:start;">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;padding-top:9px;">Observaciones</div>
+                <textarea class="p-field" id="pf-obs" placeholder="—" style="resize:vertical;min-height:48px;line-height:1.55;"></textarea>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+              <button onclick="saveProduct()"
+                style="flex:1;background:var(--success);border:none;border-radius:8px;color:#0a1f15;font-family:var(--font);font-size:14px;font-weight:600;padding:11px;cursor:pointer;transition:opacity .2s;">
+                Guardar producto
+              </button>
+              <button onclick="clearForm()"
+                style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:11px 16px;cursor:pointer;">
+                Limpiar
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -481,6 +684,287 @@ tbody tr:hover td{background:var(--surface2)}
 </div>
 
 <script>
+// ── PRODUCTO TABS CSS
+document.head.insertAdjacentHTML('beforeend',`<style>
+.ptab{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:12px;font-weight:500;padding:8px 4px;cursor:pointer;transition:all .18s;text-align:center;}
+.ptab.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);}
+.p-field{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:8px 12px;width:100%;outline:none;transition:border-color .2s;}
+.p-field:focus{border-color:var(--accent);}
+@keyframes scanmove{0%{top:4px}50%{top:calc(100% - 6px)}100%{top:4px}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>`);
+
+// ══ PRODUCTOS MODULE ══
+let productos = JSON.parse(localStorage.getItem('pos_productos') || '[]');
+let editingId = null;
+let pScanStream = null, pScanInterval = null, pScannedBarcode = null;
+let pImageBase64 = null, pRecognition = null, pIsRecording = false;
+
+function showNewProduct() {
+  editingId = null; clearForm();
+  document.getElementById('form-view-title').textContent = 'Nuevo producto';
+  document.getElementById('prod-list-view').style.display = 'none';
+  document.getElementById('prod-form-view').style.display = 'block';
+  document.getElementById('topbar-actions').innerHTML = '<button class="btn btn-ghost" onclick="showListView()">← Volver</button>';
+}
+
+function showListView() {
+  stopPScanner();
+  document.getElementById('prod-form-view').style.display = 'none';
+  document.getElementById('prod-list-view').style.display = 'block';
+  document.getElementById('topbar-actions').innerHTML = '<button class="btn btn-primary" onclick="showNewProduct()">+ Nuevo producto</button>';
+  renderProductTable();
+}
+
+function renderProductTable() {
+  const q = (document.getElementById('prod-search').value||'').toLowerCase();
+  const cat = document.getElementById('prod-filter-cat').value;
+  const filtered = productos.filter(p => {
+    const matchQ = !q || (p.nombre+p.marca+p.modelo+p.sku+p.barcode).toLowerCase().includes(q);
+    return matchQ && (!cat || p.categoria === cat);
+  });
+  const tbody = document.getElementById('prod-tbody');
+  tbody.innerHTML = '';
+  document.getElementById('prod-empty').style.display = filtered.length ? 'none' : 'block';
+  filtered.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="font-weight:500;">${p.nombre||'—'}</td>
+      <td style="color:var(--muted);font-size:12px;">${[p.marca,p.modelo].filter(Boolean).join(' · ')||'—'}</td>
+      <td><span class="badge badge-info">${p.categoria||'—'}</span></td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--muted);">${p.sku||'—'}</td>
+      <td style="font-family:var(--mono);">${p.precio?'$ '+Number(p.precio).toLocaleString('es-AR'):'—'}</td>
+      <td style="font-size:12px;color:var(--muted);">${p.iva?'IVA '+p.iva+'%':'—'}</td>
+      <td>${p.stock!=null?`<span class="badge ${p.stock>5?'badge-success':p.stock>0?'badge-warn':'badge-danger'}">${p.stock}</span>`:'—'}</td>
+      <td style="display:flex;gap:6px;">
+        <button onclick="editProduct('${p.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:4px 10px;cursor:pointer;">Editar</button>
+        <button onclick="deleteProduct('${p.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;padding:4px 10px;cursor:pointer;">✕</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterProducts(){ renderProductTable(); }
+
+function editProduct(id) {
+  const p = productos.find(x=>x.id===id); if(!p) return;
+  editingId = id;
+  document.getElementById('form-view-title').textContent = 'Editar producto';
+  document.getElementById('pf-nombre').value    = p.nombre||'';
+  document.getElementById('pf-marca').value     = p.marca||'';
+  document.getElementById('pf-modelo').value    = p.modelo||'';
+  document.getElementById('pf-categoria').value = p.categoria||'';
+  document.getElementById('pf-desc').value      = p.descripcion||'';
+  document.getElementById('pf-barcode').value   = p.barcode||'';
+  document.getElementById('pf-sku').value       = p.sku||'';
+  document.getElementById('pf-precio').value    = p.precio?'$ '+Number(p.precio).toLocaleString('es-AR'):'';
+  document.getElementById('pf-iva').value       = p.iva?'IVA '+p.iva+'%':'';
+  document.getElementById('pf-stock').value     = p.stock!=null?p.stock:'';
+  document.getElementById('pf-unidad').value    = p.unidad||'';
+  document.getElementById('pf-obs').value       = p.obs||'';
+  document.getElementById('prod-list-view').style.display = 'none';
+  document.getElementById('prod-form-view').style.display = 'block';
+}
+
+function deleteProduct(id) {
+  if(!confirm('¿Eliminar este producto?')) return;
+  productos = productos.filter(p=>p.id!==id);
+  localStorage.setItem('pos_productos', JSON.stringify(productos));
+  renderProductTable();
+}
+
+function saveProduct() {
+  const nombre = document.getElementById('pf-nombre').value.trim();
+  if(!nombre){ alert('El nombre es obligatorio.'); return; }
+  const raw = document.getElementById('pf-precio').value.replace(/[^0-9]/g,'');
+  const ivaRaw = document.getElementById('pf-iva').value.replace(/[^0-9.]/g,'');
+  const p = {
+    id: editingId||'P'+Date.now(), nombre,
+    marca: document.getElementById('pf-marca').value,
+    modelo: document.getElementById('pf-modelo').value,
+    categoria: document.getElementById('pf-categoria').value,
+    descripcion: document.getElementById('pf-desc').value,
+    barcode: document.getElementById('pf-barcode').value,
+    sku: document.getElementById('pf-sku').value,
+    precio: raw||null, iva: ivaRaw||'21',
+    stock: parseInt(document.getElementById('pf-stock').value)||0,
+    unidad: document.getElementById('pf-unidad').value,
+    obs: document.getElementById('pf-obs').value,
+  };
+  if(editingId){ const i=productos.findIndex(x=>x.id===editingId); if(i>=0) productos[i]=p; }
+  else productos.unshift(p);
+  localStorage.setItem('pos_productos', JSON.stringify(productos));
+  showListView();
+}
+
+function clearForm() {
+  ['pf-nombre','pf-marca','pf-modelo','pf-categoria','pf-desc','pf-barcode',
+   'pf-sku','pf-precio','pf-iva','pf-stock','pf-unidad','pf-obs'].forEach(id => {
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  clearPhoto(); clearPBarcode();
+  document.getElementById('p-conf-wrap').style.display='none';
+  document.getElementById('p-desc-extra').value='';
+  pImageBase64=null;
+}
+
+function switchPTab(tab) {
+  ['foto','scan','manual'].forEach(t => {
+    document.getElementById('ptab-'+t).classList.toggle('active',t===tab);
+    document.getElementById('ptab-'+t+'-panel').style.display = t===tab?'block':'none';
+  });
+  if(tab!=='scan') stopPScanner();
+}
+
+document.getElementById('p-file').addEventListener('change', async e => {
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload = async ev => {
+    pImageBase64 = ev.target.result.split(',')[1];
+    document.getElementById('p-preview-img').src = ev.target.result;
+    document.getElementById('p-dropzone').style.display='none';
+    document.getElementById('p-preview-wrap').style.display='block';
+    document.getElementById('p-analyzing').style.display='flex';
+    await generateProduct(false);
+    document.getElementById('p-analyzing').style.display='none';
+  };
+  reader.readAsDataURL(file);
+});
+
+function clearPhoto() {
+  pImageBase64=null;
+  document.getElementById('p-file').value='';
+  document.getElementById('p-preview-wrap').style.display='none';
+  document.getElementById('p-dropzone').style.display='block';
+}
+
+async function startPScanner() {
+  try {
+    pScanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});
+    const v=document.getElementById('p-scan-video');
+    v.srcObject=pScanStream; await v.play();
+    document.getElementById('p-scan-idle').style.display='none';
+    v.style.display='block';
+    document.getElementById('p-scan-ui').style.display='flex';
+    document.getElementById('p-scan-msg').style.display='block';
+    if('BarcodeDetector' in window) {
+      const det=new BarcodeDetector({formats:['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e']});
+      pScanInterval=setInterval(async()=>{
+        if(v.readyState===v.HAVE_ENOUGH_DATA){
+          try{const b=await det.detect(v);if(b.length)onPBarcodeFound(b[0].rawValue);}catch(e){}
+        }
+      },300);
+    }
+  } catch(e) { alert('No se pudo acceder a la cámara.'); resetPScanUI(); }
+}
+
+function onPBarcodeFound(code) {
+  stopPScanner(); pScannedBarcode=code;
+  document.getElementById('p-bc-text').textContent=code;
+  document.getElementById('p-bc-found').style.display='flex';
+  document.getElementById('pf-barcode').value=code;
+  if(navigator.vibrate) navigator.vibrate(80);
+}
+
+function stopPScanner() {
+  if(pScanInterval){clearInterval(pScanInterval);pScanInterval=null;}
+  if(pScanStream){pScanStream.getTracks().forEach(t=>t.stop());pScanStream=null;}
+  resetPScanUI();
+}
+
+function resetPScanUI() {
+  const v=document.getElementById('p-scan-video');
+  v.style.display='none'; v.srcObject=null;
+  document.getElementById('p-scan-ui').style.display='none';
+  document.getElementById('p-scan-msg').style.display='none';
+  document.getElementById('p-scan-idle').style.display='block';
+}
+
+function clearPBarcode() {
+  pScannedBarcode=null;
+  document.getElementById('p-bc-found').style.display='none';
+  document.getElementById('p-bc-text').textContent='';
+}
+
+function togglePMic() {
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Requiere Chrome.');return;}
+  if(pIsRecording){pRecognition&&pRecognition.stop();return;}
+  pRecognition=new SR();
+  pRecognition.lang='es-AR'; pRecognition.continuous=false; pRecognition.interimResults=false;
+  pRecognition.onstart=()=>{
+    pIsRecording=true;
+    const btn=document.getElementById('p-mic-btn');
+    btn.style.cssText+='border-color:var(--danger);color:var(--danger);';
+    btn.textContent='⏹ Detener';
+    document.getElementById('p-mic-hint').textContent='Escuchando...';
+  };
+  pRecognition.onresult=e=>{
+    const t=e.results[0][0].transcript;
+    const ta=document.getElementById('p-desc-extra');
+    ta.value=(ta.value?ta.value+' ':'')+t;
+  };
+  pRecognition.onend=pRecognition.onerror=()=>{
+    pIsRecording=false;
+    const btn=document.getElementById('p-mic-btn');
+    btn.style.borderColor=''; btn.style.color='';
+    btn.innerHTML='🎤 Dictar';
+    document.getElementById('p-mic-hint').textContent='Hablá después de presionar';
+  };
+  pRecognition.start();
+}
+
+async function generateProduct() {
+  const desc=document.getElementById('p-desc-extra').value.trim();
+  const manualCode=document.getElementById('p-manual-code')?document.getElementById('p-manual-code').value.trim():'';
+  const barcode=pScannedBarcode||manualCode;
+  if(!pImageBase64&&!barcode&&!desc){alert('Agregá foto, código o descripción.');return;}
+  const btn=document.getElementById('p-gen-btn');
+  btn.disabled=true;
+  document.getElementById('p-gen-spinner').style.display='inline-block';
+  document.getElementById('p-gen-text').textContent='Analizando…';
+  const content=[];
+  if(pImageBase64) content.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:pImageBase64}});
+  const prompt=`Sos experto en inventario para negocios en Argentina.
+${pImageBase64?'Analizá la imagen: identificá marca, modelo, tipo, características.':''}
+${barcode?`Código: ${barcode}.`:''}${desc?`Info: "${desc}"`:''}
+Respondé SOLO con JSON sin markdown:
+{"nombre":"","marca":"","modelo":"","categoria":"","descripcion":"2-3 oraciones español rioplatense","barcode":"${barcode||''}","sku":"AAA-00000","precio_sugerido":"número","alicuota_iva":"10.5 o 21","unidad_venta":"Unidad","observaciones":"","confianza":85}`;
+  content.push({type:'text',text:prompt});
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content}]})
+    });
+    const data=await res.json();
+    const raw=data.content.map(b=>b.text||'').join('');
+    const p=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    document.getElementById('pf-nombre').value    = p.nombre||'';
+    document.getElementById('pf-marca').value     = p.marca||'';
+    document.getElementById('pf-modelo').value    = p.modelo||'';
+    document.getElementById('pf-categoria').value = p.categoria||'';
+    document.getElementById('pf-desc').value      = p.descripcion||'';
+    document.getElementById('pf-barcode').value   = barcode||p.barcode||'';
+    document.getElementById('pf-sku').value       = p.sku||'';
+    document.getElementById('pf-precio').value    = p.precio_sugerido?'$ '+Number(p.precio_sugerido).toLocaleString('es-AR'):'';
+    document.getElementById('pf-iva').value       = 'IVA '+(p.alicuota_iva||'21')+'%';
+    document.getElementById('pf-unidad').value    = p.unidad_venta||'Unidad';
+    document.getElementById('pf-obs').value       = p.observaciones||'';
+    const conf=Math.min(99,Math.max(55,parseInt(p.confianza)||80));
+    document.getElementById('p-conf-wrap').style.display='flex';
+    document.getElementById('p-conf-fill').style.width=conf+'%';
+    document.getElementById('p-conf-pct').textContent=conf+'%';
+  } catch(e){alert('Error al analizar. Verificá tu conexión.');console.error(e);}
+  finally{
+    btn.disabled=false;
+    document.getElementById('p-gen-spinner').style.display='none';
+    document.getElementById('p-gen-text').textContent='↺ Regenerar ficha';
+  }
+}
+
+renderProductTable();
+
+// ══ FIN PRODUCTOS ══
+
 const modules = {
   dashboard:     { title:'Dashboard',           sub:'Resumen general del negocio' },
   pos:           { title:'Punto de venta',       sub:'Caja y cobros' },
@@ -510,6 +994,14 @@ function navigate(mod) {
   });
   document.getElementById('topbar-title').textContent = modules[mod].title;
   document.getElementById('topbar-sub').textContent   = modules[mod].sub;
+  // Acciones específicas por módulo
+  const actions = document.getElementById('topbar-actions');
+  if (mod === 'productos') {
+    actions.innerHTML = '<button class="btn btn-primary" onclick="showNewProduct()">+ Nuevo producto</button>';
+    showListView();
+  } else {
+    actions.innerHTML = '';
+  }
   current = mod;
 }
 
