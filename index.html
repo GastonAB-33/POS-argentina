@@ -6,11 +6,11 @@
 <title>Carga de producto · IA</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
   :root {
     --bg:#0f0f11; --surface:#18181c; --surface2:#222228; --border:#2e2e38;
     --accent:#7c6af7; --accent-soft:#7c6af718; --accent2:#34d399;
-    --text:#e8e8f0; --muted:#888899; --danger:#f87171; --warn:#fbbf24;
+    --text:#e8e8f0; --muted:#888899; --danger:#f87171;
     --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace; --r:14px; --rs:8px;
   }
   body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px 14px 60px; }
@@ -20,7 +20,7 @@
   header p { color:var(--muted); font-size:13px; margin-top:5px; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:20px; width:100%; max-width:520px; margin-bottom:14px; }
   .card-title { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:500; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
-  .card-title .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
   .input-tabs { display:flex; gap:6px; margin-bottom:14px; }
   .tab-btn { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); color:var(--muted); font-family:var(--font); font-size:12px; font-weight:500; padding:9px 4px; cursor:pointer; transition:all .18s; text-align:center; }
   .tab-btn.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
@@ -30,7 +30,6 @@
   /* SCANNER */
   #scanner-container { position:relative; width:100%; background:#000; border-radius:var(--rs); overflow:hidden; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; }
   #scanner-video { width:100%; height:100%; object-fit:cover; display:block; }
-  #scanner-canvas { display:none; }
   .scan-ui { position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center; }
   .scan-box { width:65%; max-width:240px; height:100px; border:2px solid var(--accent2); border-radius:10px; position:relative; }
   .scan-line { position:absolute; left:0; right:0; height:2px; background:var(--accent2); opacity:.85; animation:scanmove 1.8s ease-in-out infinite; }
@@ -42,7 +41,6 @@
   .sc.br{bottom:-2px;right:-2px;border-bottom-width:3px;border-right-width:3px;border-radius:0 0 4px 0}
   #scan-msg { position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:12px; color:#ffffffcc; font-family:var(--mono); }
   #scan-idle-btn { display:flex; align-items:center; gap:8px; background:var(--accent); border:none; border-radius:var(--rs); color:#fff; font-family:var(--font); font-size:14px; font-weight:500; padding:12px 24px; cursor:pointer; }
-  #scan-idle-btn:hover { opacity:.85; }
   .bc-found { display:none; align-items:center; gap:10px; margin-top:12px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); padding:10px 14px; }
   .bc-code { font-family:var(--mono); font-size:13px; color:var(--accent2); flex:1; }
   .bc-clear { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:2px 6px; }
@@ -50,13 +48,39 @@
   /* FOTO */
   #drop-zone { border:1.5px dashed var(--border); border-radius:var(--rs); padding:28px 16px; text-align:center; cursor:pointer; transition:border-color .2s,background .2s; }
   #drop-zone:hover { border-color:var(--accent); background:var(--accent-soft); }
-  #drop-zone .icon { font-size:28px; margin-bottom:6px; opacity:.7; }
+  #drop-zone .icon { font-size:32px; margin-bottom:8px; opacity:.7; }
   #drop-zone p { font-size:13px; color:var(--muted); }
   #drop-zone strong { color:var(--accent); }
   #file-input { display:none; }
   #preview-wrap { display:none; position:relative; }
-  #preview-img { width:100%; border-radius:var(--rs); display:block; max-height:240px; object-fit:cover; }
+  #preview-img { width:100%; border-radius:var(--rs); display:block; max-height:260px; object-fit:cover; }
   .remove-btn { position:absolute; top:8px; right:8px; background:#000a; border:none; border-radius:99px; color:#fff; font-size:12px; padding:4px 10px; cursor:pointer; }
+
+  /* ANÁLISIS AUTOMÁTICO DE IMAGEN */
+  #vision-box {
+    display:none; margin-top:12px;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:var(--rs); overflow:hidden;
+  }
+  .vision-header {
+    display:flex; align-items:center; gap:8px;
+    padding:10px 14px; border-bottom:1px solid var(--border);
+    font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-weight:500;
+  }
+  .vision-header .pulse-dot {
+    width:7px; height:7px; border-radius:50%; background:var(--accent2);
+    animation:pulse-dot 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+  .vision-header .pulse-dot.done { animation:none; background:var(--accent2); }
+  #vision-text {
+    padding:12px 14px; font-size:13px; color:var(--text);
+    line-height:1.65; min-height:48px;
+  }
+  .vision-typing::after {
+    content:'▋'; animation:blink .8s step-end infinite; color:var(--accent);
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
   /* INPUTS */
   input[type=text], textarea { background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:14px; padding:10px 13px; width:100%; transition:border-color .2s; }
@@ -72,7 +96,7 @@
   @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 #f8717133} 50%{box-shadow:0 0 0 5px #f8717100} }
   .mic-hint { font-size:11px; color:var(--muted); }
 
-  /* BOTÓN PRINCIPAL */
+  /* BOTÓN */
   #analyze-btn { width:100%; max-width:520px; background:var(--accent); border:none; border-radius:var(--rs); color:#fff; font-family:var(--font); font-size:15px; font-weight:500; padding:14px; cursor:pointer; transition:opacity .2s,transform .1s; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px; }
   #analyze-btn:disabled { opacity:.4; cursor:not-allowed; }
   #analyze-btn:not(:disabled):hover { opacity:.88; }
@@ -110,33 +134,69 @@
   .conf-fill { height:100%; background:var(--accent2); border-radius:99px; transition:width .6s ease; width:0%; }
   .conf-pct { font-size:11px; font-family:var(--mono); color:var(--accent2); min-width:32px; }
   .error-msg { display:none; background:#f8717111; border:1px solid #f8717144; border-radius:var(--rs); color:var(--danger); font-size:13px; padding:11px 14px; margin-bottom:12px; width:100%; max-width:520px; }
+
+  /* Botón secundario dentro de la card de foto */
+  .btn-reanalyze {
+    display:none; width:100%; margin-top:10px;
+    background:none; border:1px solid var(--border); border-radius:var(--rs);
+    color:var(--muted); font-family:var(--font); font-size:13px;
+    padding:9px; cursor:pointer; transition:all .2s; text-align:center;
+  }
+  .btn-reanalyze:hover { border-color:var(--accent); color:var(--accent); }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo-tag">POS Argentina · v3</div>
+  <div class="logo-tag">POS Argentina · v4</div>
   <h1>Carga de producto</h1>
-  <p>Escaneá, fotografiá o dictá — la IA completa la ficha.</p>
+  <p>Fotografiá el producto — la IA lo identifica automáticamente.</p>
 </header>
 
+<!-- CARD 1: ENTRADA -->
 <div class="card">
   <div class="card-title"><span class="dot"></span>1 · Identificación del producto</div>
   <div class="input-tabs">
-    <button class="tab-btn active" onclick="switchTab('barcode')">📷 Escanear código</button>
-    <button class="tab-btn" onclick="switchTab('photo')">🖼 Foto</button>
+    <button class="tab-btn active" onclick="switchTab('photo')">📷 Foto automática</button>
+    <button class="tab-btn" onclick="switchTab('barcode')">⬛ Código de barras</button>
     <button class="tab-btn" onclick="switchTab('manual')">⌨ Manual</button>
   </div>
 
+  <!-- TAB FOTO (ahora primero y por defecto) -->
+  <div class="tab-panel active" id="tab-photo">
+    <div id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div class="icon">📷</div>
+      <p><strong>Tocá para fotografiar el producto</strong></p>
+      <p style="margin-top:6px;font-size:12px;color:var(--muted);">La IA lee la imagen y completa la ficha automáticamente</p>
+    </div>
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="preview">
+      <button class="remove-btn" onclick="removeImage()">✕</button>
+    </div>
+    <input type="file" id="file-input" accept="image/*" capture="environment">
+
+    <!-- Resultado de visión automática -->
+    <div id="vision-box">
+      <div class="vision-header">
+        <div class="pulse-dot" id="vision-dot"></div>
+        <span id="vision-label">Analizando imagen...</span>
+      </div>
+      <div id="vision-text"></div>
+    </div>
+
+    <button class="btn-reanalyze" id="btn-reanalyze" onclick="runVisionOnly()">
+      ↺ Volver a analizar imagen
+    </button>
+  </div>
+
   <!-- TAB SCANNER -->
-  <div class="tab-panel active" id="tab-barcode">
+  <div class="tab-panel" id="tab-barcode">
     <div id="scanner-container">
-      <div id="scan-idle">
+      <div id="scan-idle" style="text-align:center;padding:20px;">
         <button id="scan-idle-btn" onclick="startScanner()">📷 Activar cámara</button>
-        <p style="font-size:12px;color:#ffffff88;margin-top:10px;text-align:center;">Apuntá al código de barras del producto</p>
+        <p style="font-size:12px;color:#ffffff88;margin-top:10px;">Apuntá al código de barras del producto</p>
       </div>
       <video id="scanner-video" style="display:none;" playsinline autoplay muted></video>
-      <canvas id="scanner-canvas"></canvas>
       <div class="scan-ui" id="scan-ui" style="display:none;">
         <div class="scan-box">
           <div class="scan-line"></div>
@@ -153,20 +213,6 @@
     </div>
   </div>
 
-  <!-- TAB FOTO -->
-  <div class="tab-panel" id="tab-photo">
-    <div id="drop-zone" onclick="document.getElementById('file-input').click()">
-      <div class="icon">📷</div>
-      <p><strong>Tocá para abrir la cámara</strong> o subir foto</p>
-      <p style="margin-top:4px;font-size:11px;">JPG, PNG · hasta 10 MB</p>
-    </div>
-    <div id="preview-wrap">
-      <img id="preview-img" src="" alt="preview">
-      <button class="remove-btn" onclick="removeImage()">✕ Quitar</button>
-    </div>
-    <input type="file" id="file-input" accept="image/*" capture="environment">
-  </div>
-
   <!-- TAB MANUAL -->
   <div class="tab-panel" id="tab-manual">
     <input type="text" id="manual-code" placeholder="Código de barras (EAN, UPC, ISBN…)">
@@ -174,9 +220,10 @@
   </div>
 </div>
 
+<!-- CARD 2: DESCRIPCIÓN -->
 <div class="card">
-  <div class="card-title"><span class="dot"></span>2 · Descripción adicional (opcional)</div>
-  <textarea id="description" placeholder="Ej: crema corporal Nivea 400ml hidratante piel seca…"></textarea>
+  <div class="card-title"><span class="dot"></span>2 · Agregá más detalle (opcional)</div>
+  <textarea id="description" placeholder="La IA ya completó lo que vio. Podés agregar más info o corregir algo…"></textarea>
   <div class="mic-row">
     <button id="mic-btn" onclick="toggleMic()">🎤 Dictar</button>
     <span class="mic-hint" id="mic-hint">Hablá después de presionar</span>
@@ -187,9 +234,10 @@
 
 <button id="analyze-btn" onclick="analyzeProduct()">
   <span class="spinner" id="spinner"></span>
-  <span id="btn-text">✦ Generar ficha con IA</span>
+  <span id="btn-text">✦ Generar ficha completa</span>
 </button>
 
+<!-- RESULTADO -->
 <div class="card" id="result-card">
   <div class="result-header">
     <div class="result-title">Ficha generada</div>
@@ -227,72 +275,143 @@
 </div>
 
 <script>
-// ── Estado
 let imageBase64 = null;
 let scannedBarcode = null;
 let scanStream = null;
 let scanInterval = null;
 let recognition = null;
 let isRecording = false;
+let visionDescription = '';
 
 // ── TABS
 function switchTab(tab) {
-  ['barcode','photo','manual'].forEach((t,i) => {
+  ['photo','barcode','manual'].forEach((t,i) => {
     document.querySelectorAll('.tab-btn')[i].classList.toggle('active', t===tab);
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
   if (tab !== 'barcode') stopScanner();
 }
 
-// ── SCANNER con getUserMedia + BarcodeDetector (nativo) o canvas fallback
+// ── FOTO + ANÁLISIS AUTOMÁTICO DE VISIÓN
+document.getElementById('file-input').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    imageBase64 = ev.target.result.split(',')[1];
+    document.getElementById('preview-img').src = ev.target.result;
+    document.getElementById('drop-zone').style.display = 'none';
+    document.getElementById('preview-wrap').style.display = 'block';
+    document.getElementById('btn-reanalyze').style.display = 'block';
+    // Disparar análisis de visión automáticamente
+    await runVisionOnly();
+  };
+  reader.readAsDataURL(file);
+});
+
+async function runVisionOnly() {
+  if (!imageBase64) return;
+  hideError();
+
+  const box = document.getElementById('vision-box');
+  const dot = document.getElementById('vision-dot');
+  const label = document.getElementById('vision-label');
+  const textEl = document.getElementById('vision-text');
+
+  box.style.display = 'block';
+  dot.className = 'pulse-dot';
+  label.textContent = 'Analizando imagen...';
+  textEl.textContent = '';
+  textEl.className = 'vision-typing';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
+            { type: 'text', text: `Analizá esta imagen de un producto. Describí en 2-3 oraciones en español rioplatense informal lo que ves: qué producto es, marca visible, modelo si lo ves, color, tamaño estimado, cualquier texto del packaging que se lea. Sé directo y específico, como si le dijeras a alguien qué producto tiene en la mano. No uses listas, solo texto corrido.` }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+    const desc = data.content.map(b => b.text || '').join('').trim();
+    visionDescription = desc;
+
+    // Efecto de escritura progresiva
+    textEl.className = '';
+    textEl.textContent = '';
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < desc.length) {
+        textEl.textContent += desc[i++];
+      } else {
+        clearInterval(interval);
+        dot.className = 'pulse-dot done';
+        label.textContent = 'Imagen analizada';
+        // Pre-llenar el textarea de descripción
+        const ta = document.getElementById('description');
+        if (!ta.value.trim()) ta.value = desc;
+      }
+    }, 12);
+
+  } catch(err) {
+    box.style.display = 'none';
+    visionDescription = '';
+    console.error(err);
+  }
+}
+
+function removeImage() {
+  imageBase64 = null;
+  visionDescription = '';
+  document.getElementById('file-input').value = '';
+  document.getElementById('preview-wrap').style.display = 'none';
+  document.getElementById('drop-zone').style.display = 'block';
+  document.getElementById('vision-box').style.display = 'none';
+  document.getElementById('btn-reanalyze').style.display = 'none';
+  document.getElementById('vision-text').textContent = '';
+  document.getElementById('description').value = '';
+}
+
+// ── SCANNER
 async function startScanner() {
   hideError();
   try {
-    // Pedir cámara trasera explícitamente
-    const constraints = {
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
-    };
-
-    scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
     const video = document.getElementById('scanner-video');
     video.srcObject = scanStream;
     await video.play();
-
     document.getElementById('scan-idle').style.display = 'none';
     video.style.display = 'block';
     document.getElementById('scan-ui').style.display = 'flex';
     document.getElementById('scan-msg').style.display = 'block';
 
-    // Intentar BarcodeDetector nativo (Chrome Android lo soporta)
     if ('BarcodeDetector' in window) {
-      const detector = new BarcodeDetector({
-        formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf','data_matrix','aztec','pdf417']
-      });
+      const detector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf','data_matrix'] });
       scanInterval = setInterval(async () => {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
           try {
             const barcodes = await detector.detect(video);
-            if (barcodes.length > 0) {
-              onBarcodeFound(barcodes[0].rawValue);
-            }
+            if (barcodes.length > 0) onBarcodeFound(barcodes[0].rawValue);
           } catch(e) {}
         }
       }, 300);
     } else {
-      // Fallback: ZXing via CDN
       loadZXing();
     }
-
   } catch(err) {
-    console.error(err);
     if (err.name === 'NotAllowedError') {
       showError('Permiso de cámara denegado. Tocá el candado 🔒 en la barra de la URL → Permisos → Cámara → Permitir, y recargá.');
-    } else if (err.name === 'NotFoundError') {
-      showError('No se encontró cámara en este dispositivo.');
     } else {
       showError('No se pudo iniciar la cámara: ' + err.message);
     }
@@ -309,13 +428,10 @@ function loadZXing() {
     const video = document.getElementById('scanner-video');
     const hints = new Map();
     hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    const reader = new ZXing.BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 250 });
+    const reader = new ZXing.BrowserMultiFormatReader(hints, { delayBetweenScanAttempts:250 });
     window._zxingReader = reader;
-    reader.decodeFromVideoElement(video, (result, err) => {
-      if (result) onBarcodeFound(result.getText());
-    });
+    reader.decodeFromVideoElement(video, (result) => { if (result) onBarcodeFound(result.getText()); });
   };
-  s.onerror = () => showError('No se pudo cargar el lector. Usá el ingreso manual.');
   document.head.appendChild(s);
 }
 
@@ -339,46 +455,21 @@ function resetScanUI() {
   v.style.display = 'none'; v.srcObject = null;
   document.getElementById('scan-ui').style.display = 'none';
   document.getElementById('scan-msg').style.display = 'none';
-  document.getElementById('scan-idle').style.display = 'flex';
+  document.getElementById('scan-idle').style.display = 'block';
 }
 
 function clearBarcode() {
   scannedBarcode = null;
   document.getElementById('bc-found').style.display = 'none';
-  document.getElementById('bc-text').textContent = '—';
-}
-
-// ── FOTO
-document.getElementById('file-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      imageBase64 = ev.target.result.split(',')[1];
-      document.getElementById('preview-img').src = ev.target.result;
-      document.getElementById('drop-zone').style.display = 'none';
-      document.getElementById('preview-wrap').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-function removeImage() {
-  imageBase64 = null;
-  document.getElementById('file-input').value = '';
-  document.getElementById('preview-wrap').style.display = 'none';
-  document.getElementById('drop-zone').style.display = 'block';
 }
 
 // ── MICRÓFONO
 function toggleMic() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError('El dictado requiere Chrome. Abrí la página desde Chrome en tu celular.'); return; }
+  if (!SR) { showError('El dictado requiere Chrome.'); return; }
   if (isRecording) { recognition && recognition.stop(); return; }
   recognition = new SR();
-  recognition.lang = 'es-AR';
-  recognition.continuous = false;
-  recognition.interimResults = false;
+  recognition.lang = 'es-AR'; recognition.continuous = false; recognition.interimResults = false;
   recognition.onstart = () => {
     isRecording = true;
     document.getElementById('mic-btn').classList.add('recording');
@@ -399,14 +490,14 @@ function toggleMic() {
   recognition.start();
 }
 
-// ── ANÁLISIS IA
+// ── GENERAR FICHA COMPLETA
 async function analyzeProduct() {
   const desc = document.getElementById('description').value.trim();
-  const manualCode = document.getElementById('manual-code') ? document.getElementById('manual-code').value.trim() : '';
+  const manualCode = document.getElementById('manual-code').value.trim();
   const barcode = scannedBarcode || manualCode;
 
   if (!imageBase64 && !barcode && !desc) {
-    showError('Escaneá un código, tomá una foto o escribí una descripción del producto.');
+    showError('Fotografiá el producto, escaneá el código o escribí una descripción.');
     return;
   }
   hideError();
@@ -417,27 +508,31 @@ async function analyzeProduct() {
     content.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data:imageBase64 } });
   }
 
-  const prompt = `Sos un asistente experto en gestión de inventario para negocios en Argentina.
-Analizá la información disponible y generá una ficha de producto completa.
-${barcode ? `Código de barras escaneado: ${barcode}` : ''}
-${desc ? `Descripción del operador: "${desc}"` : ''}
-${barcode ? `Si reconocés el código "${barcode}", usá ese conocimiento para completar la ficha con precisión.` : ''}
+  const visionCtx = visionDescription ? `\nLo que la IA vio en la imagen: "${visionDescription}"` : '';
+  const barcodeCtx = barcode ? `\nCódigo de barras: ${barcode}` : '';
+  const descCtx = desc ? `\nDescripción del operador: "${desc}"` : '';
 
-Respondé ÚNICAMENTE con este JSON válido, sin markdown ni explicaciones:
+  const prompt = `Sos un asistente experto en gestión de inventario para negocios en Argentina.
+Analizá toda la información disponible y generá una ficha de producto completa y precisa.
+${visionCtx}${barcodeCtx}${descCtx}
+
+Usá la imagen (si está disponible) como fuente primaria. Leé todo el texto visible en el packaging: nombre, marca, modelo, contenido neto, país de origen, advertencias, ingredientes si aplica.
+
+Respondé ÚNICAMENTE con este JSON válido, sin markdown ni texto adicional:
 {
-  "nombre": "nombre comercial completo",
-  "marca": "marca",
-  "modelo": "modelo o referencia",
-  "categoria": "categoría",
-  "descripcion": "descripción de venta 2-3 oraciones en español rioplatense",
+  "nombre": "nombre comercial completo tal como figura en el packaging",
+  "marca": "marca del fabricante",
+  "modelo": "modelo, variante o referencia específica",
+  "categoria": "categoría del producto",
+  "descripcion": "descripción de venta atractiva, 2-3 oraciones en español rioplatense, orientada al comprador",
   "barcode": "${barcode || ''}",
   "sku": "SKU sugerido formato AAA-00000",
-  "precio_sugerido": "número sin símbolo ni puntos",
-  "alicuota_iva": "10.5 o 21",
-  "unidad_venta": "Unidad / Par / Kg / etc.",
-  "palabras_clave": ["kw1","kw2","kw3"],
-  "observaciones": "garantía, origen, SENASA si aplica, etc.",
-  "confianza": número 55-99
+  "precio_sugerido": "número entero sin símbolo ni puntos",
+  "alicuota_iva": "10.5 o 21 según corresponda en Argentina",
+  "unidad_venta": "Unidad / Par / Kg / Litro / Caja x12 / etc.",
+  "palabras_clave": ["kw1","kw2","kw3","kw4"],
+  "observaciones": "contenido neto, país de origen, garantía, SENASA si aplica, vencimiento si es alimento, etc.",
+  "confianza": número entre 55 y 99
 }`;
 
   content.push({ type:'text', text:prompt });
@@ -461,17 +556,17 @@ Respondé ÚNICAMENTE con este JSON válido, sin markdown ni explicaciones:
 }
 
 function renderResult(p, barcode) {
-  document.getElementById('f-nombre').value     = p.nombre || '';
-  document.getElementById('f-marca').value      = p.marca || '';
-  document.getElementById('f-modelo').value     = p.modelo || '';
-  document.getElementById('f-categoria').value  = p.categoria || '';
-  document.getElementById('f-descripcion').value= p.descripcion || '';
-  document.getElementById('f-barcode').value    = barcode || p.barcode || '';
-  document.getElementById('f-sku').value        = p.sku || '';
-  document.getElementById('f-precio').value     = p.precio_sugerido ? '$ ' + Number(p.precio_sugerido).toLocaleString('es-AR') : '';
-  document.getElementById('f-iva').value        = 'IVA ' + (p.alicuota_iva||'21') + '%';
-  document.getElementById('f-unidad').value     = p.unidad_venta || '';
-  document.getElementById('f-obs').value        = p.observaciones || '';
+  document.getElementById('f-nombre').value      = p.nombre || '';
+  document.getElementById('f-marca').value       = p.marca || '';
+  document.getElementById('f-modelo').value      = p.modelo || '';
+  document.getElementById('f-categoria').value   = p.categoria || '';
+  document.getElementById('f-descripcion').value = p.descripcion || '';
+  document.getElementById('f-barcode').value     = barcode || p.barcode || '';
+  document.getElementById('f-sku').value         = p.sku || '';
+  document.getElementById('f-precio').value      = p.precio_sugerido ? '$ ' + Number(p.precio_sugerido).toLocaleString('es-AR') : '';
+  document.getElementById('f-iva').value         = 'IVA ' + (p.alicuota_iva||'21') + '%';
+  document.getElementById('f-unidad').value      = p.unidad_venta || '';
+  document.getElementById('f-obs').value         = p.observaciones || '';
   const tw = document.getElementById('f-tags');
   tw.innerHTML = '';
   (p.palabras_clave||[]).forEach(t => { const s=document.createElement('span'); s.className='tag'; s.textContent=t; tw.appendChild(s); });
@@ -491,7 +586,7 @@ function saveProduct() {
 function resetAll() {
   removeImage(); clearBarcode(); stopScanner();
   document.getElementById('description').value = '';
-  if (document.getElementById('manual-code')) document.getElementById('manual-code').value = '';
+  document.getElementById('manual-code').value = '';
   document.getElementById('result-card').style.display = 'none';
   hideError();
   window.scrollTo({ top:0, behavior:'smooth' });
@@ -500,7 +595,7 @@ function resetAll() {
 function setBusy(b) {
   document.getElementById('analyze-btn').disabled = b;
   document.getElementById('spinner').style.display = b ? 'block' : 'none';
-  document.getElementById('btn-text').textContent = b ? 'Analizando…' : '✦ Generar ficha con IA';
+  document.getElementById('btn-text').textContent = b ? 'Generando ficha…' : '✦ Generar ficha completa';
 }
 
 function showError(msg) { const e=document.getElementById('error-msg'); e.textContent=msg; e.style.display='block'; }
