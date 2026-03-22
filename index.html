@@ -2,604 +2,526 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Carga de producto · IA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POS Argentina</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-  :root {
-    --bg:#0f0f11; --surface:#18181c; --surface2:#222228; --border:#2e2e38;
-    --accent:#7c6af7; --accent-soft:#7c6af718; --accent2:#34d399;
-    --text:#e8e8f0; --muted:#888899; --danger:#f87171;
-    --font:'DM Sans',sans-serif; --mono:'DM Mono',monospace; --r:14px; --rs:8px;
-  }
-  body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px 14px 60px; }
-  header { text-align:center; margin-bottom:26px; }
-  .logo-tag { display:inline-flex; align-items:center; gap:6px; background:var(--accent-soft); border:1px solid #7c6af733; border-radius:99px; padding:4px 14px; font-size:11px; color:var(--accent); letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; font-weight:500; }
-  header h1 { font-size:24px; font-weight:600; letter-spacing:-.02em; }
-  header p { color:var(--muted); font-size:13px; margin-top:5px; }
-  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:20px; width:100%; max-width:520px; margin-bottom:14px; }
-  .card-title { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:500; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
-  .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
-  .input-tabs { display:flex; gap:6px; margin-bottom:14px; }
-  .tab-btn { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); color:var(--muted); font-family:var(--font); font-size:12px; font-weight:500; padding:9px 4px; cursor:pointer; transition:all .18s; text-align:center; }
-  .tab-btn.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
-  .tab-panel { display:none; }
-  .tab-panel.active { display:block; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f11;--sidebar:#131316;--surface:#18181c;--surface2:#222228;
+  --border:#2a2a33;--accent:#7c6af7;--accent-soft:#7c6af715;
+  --text:#e8e8f0;--muted:#888899;--danger:#f87171;--success:#34d399;--warn:#fbbf24;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+  --sidebar-w:240px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex}
 
-  /* SCANNER */
-  #scanner-container { position:relative; width:100%; background:#000; border-radius:var(--rs); overflow:hidden; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; }
-  #scanner-video { width:100%; height:100%; object-fit:cover; display:block; }
-  .scan-ui { position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center; }
-  .scan-box { width:65%; max-width:240px; height:100px; border:2px solid var(--accent2); border-radius:10px; position:relative; }
-  .scan-line { position:absolute; left:0; right:0; height:2px; background:var(--accent2); opacity:.85; animation:scanmove 1.8s ease-in-out infinite; }
-  @keyframes scanmove { 0%{top:4px} 50%{top:calc(100% - 6px)} 100%{top:4px} }
-  .sc { position:absolute; width:14px; height:14px; border-color:var(--accent2); border-style:solid; border-width:0; }
-  .sc.tl{top:-2px;left:-2px;border-top-width:3px;border-left-width:3px;border-radius:4px 0 0 0}
-  .sc.tr{top:-2px;right:-2px;border-top-width:3px;border-right-width:3px;border-radius:0 4px 0 0}
-  .sc.bl{bottom:-2px;left:-2px;border-bottom-width:3px;border-left-width:3px;border-radius:0 0 0 4px}
-  .sc.br{bottom:-2px;right:-2px;border-bottom-width:3px;border-right-width:3px;border-radius:0 0 4px 0}
-  #scan-msg { position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:12px; color:#ffffffcc; font-family:var(--mono); }
-  #scan-idle-btn { display:flex; align-items:center; gap:8px; background:var(--accent); border:none; border-radius:var(--rs); color:#fff; font-family:var(--font); font-size:14px; font-weight:500; padding:12px 24px; cursor:pointer; }
-  .bc-found { display:none; align-items:center; gap:10px; margin-top:12px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); padding:10px 14px; }
-  .bc-code { font-family:var(--mono); font-size:13px; color:var(--accent2); flex:1; }
-  .bc-clear { background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:2px 6px; }
+/* ── SIDEBAR ── */
+#sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);height:100vh;
+  background:var(--sidebar);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+  transition:width .25s ease;z-index:100;
+}
+#sidebar.collapsed{width:60px;min-width:60px}
 
-  /* FOTO */
-  #drop-zone { border:1.5px dashed var(--border); border-radius:var(--rs); padding:28px 16px; text-align:center; cursor:pointer; transition:border-color .2s,background .2s; }
-  #drop-zone:hover { border-color:var(--accent); background:var(--accent-soft); }
-  #drop-zone .icon { font-size:32px; margin-bottom:8px; opacity:.7; }
-  #drop-zone p { font-size:13px; color:var(--muted); }
-  #drop-zone strong { color:var(--accent); }
-  #file-input { display:none; }
-  #preview-wrap { display:none; position:relative; }
-  #preview-img { width:100%; border-radius:var(--rs); display:block; max-height:260px; object-fit:cover; }
-  .remove-btn { position:absolute; top:8px; right:8px; background:#000a; border:none; border-radius:99px; color:#fff; font-size:12px; padding:4px 10px; cursor:pointer; }
+.sidebar-header{
+  padding:20px 16px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;min-height:64px;
+}
+.brand-logo{
+  width:32px;height:32px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;flex-shrink:0;letter-spacing:-.5px;
+}
+.brand-name{font-size:14px;font-weight:600;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;}
+.brand-sub{font-size:10px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;}
 
-  /* ANÁLISIS AUTOMÁTICO DE IMAGEN */
-  #vision-box {
-    display:none; margin-top:12px;
-    background:var(--surface2); border:1px solid var(--border);
-    border-radius:var(--rs); overflow:hidden;
-  }
-  .vision-header {
-    display:flex; align-items:center; gap:8px;
-    padding:10px 14px; border-bottom:1px solid var(--border);
-    font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-weight:500;
-  }
-  .vision-header .pulse-dot {
-    width:7px; height:7px; border-radius:50%; background:var(--accent2);
-    animation:pulse-dot 1.2s ease-in-out infinite;
-  }
-  @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
-  .vision-header .pulse-dot.done { animation:none; background:var(--accent2); }
-  #vision-text {
-    padding:12px 14px; font-size:13px; color:var(--text);
-    line-height:1.65; min-height:48px;
-  }
-  .vision-typing::after {
-    content:'▋'; animation:blink .8s step-end infinite; color:var(--accent);
-  }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+#toggle-sidebar{
+  margin-left:auto;background:none;border:none;color:var(--muted);
+  cursor:pointer;padding:4px;border-radius:6px;flex-shrink:0;
+  transition:color .15s;font-size:16px;line-height:1;
+}
+#toggle-sidebar:hover{color:var(--text)}
 
-  /* INPUTS */
-  input[type=text], textarea { background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:14px; padding:10px 13px; width:100%; transition:border-color .2s; }
-  input[type=text]:focus, textarea:focus { outline:none; border-color:var(--accent); }
-  input[type=text]::placeholder, textarea::placeholder { color:var(--muted); }
-  textarea#description { resize:none; height:84px; line-height:1.6; }
+.nav-section{padding:12px 8px 4px;}
+.nav-label{
+  font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);padding:0 8px;margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;opacity:1;transition:opacity .2s;
+}
+#sidebar.collapsed .nav-label{opacity:0}
 
-  /* MIC */
-  .mic-row { display:flex; align-items:center; gap:10px; margin-top:10px; }
-  #mic-btn { display:flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:99px; color:var(--muted); font-family:var(--font); font-size:12px; padding:7px 16px; cursor:pointer; transition:all .2s; white-space:nowrap; }
-  #mic-btn:hover { border-color:var(--accent); color:var(--accent); }
-  #mic-btn.recording { border-color:var(--danger); color:var(--danger); background:#f8717111; animation:pulse 1s ease-in-out infinite; }
-  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 #f8717133} 50%{box-shadow:0 0 0 5px #f8717100} }
-  .mic-hint { font-size:11px; color:var(--muted); }
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:8px;cursor:pointer;
+  transition:background .15s,color .15s;color:var(--muted);
+  text-decoration:none;white-space:nowrap;overflow:hidden;
+  border:none;background:none;width:100%;text-align:left;font-family:var(--font);
+  font-size:13.5px;font-weight:400;
+}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent)}
+.nav-item.active .nav-icon{color:var(--accent)}
+.nav-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;line-height:1}
+.nav-text{overflow:hidden;transition:opacity .2s,width .2s;}
+#sidebar.collapsed .nav-text{opacity:0;width:0}
 
-  /* BOTÓN */
-  #analyze-btn { width:100%; max-width:520px; background:var(--accent); border:none; border-radius:var(--rs); color:#fff; font-family:var(--font); font-size:15px; font-weight:500; padding:14px; cursor:pointer; transition:opacity .2s,transform .1s; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:14px; }
-  #analyze-btn:disabled { opacity:.4; cursor:not-allowed; }
-  #analyze-btn:not(:disabled):hover { opacity:.88; }
-  #analyze-btn:not(:disabled):active { transform:scale(.98); }
-  .spinner { width:16px; height:16px; border:2px solid #ffffff44; border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none; }
-  @keyframes spin { to{transform:rotate(360deg)} }
+.nav-badge{
+  margin-left:auto;background:var(--accent);color:#fff;
+  font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px;
+  flex-shrink:0;transition:opacity .2s;
+}
+#sidebar.collapsed .nav-badge{opacity:0}
 
-  /* RESULTADO */
-  #result-card { display:none; width:100%; max-width:520px; }
-  .result-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-  .result-title { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent2); font-weight:500; display:flex; align-items:center; gap:8px; }
-  .result-title::before { content:''; display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent2); }
-  .edit-all-btn { background:none; border:1px solid var(--border); border-radius:99px; color:var(--muted); font-family:var(--font); font-size:11px; padding:4px 12px; cursor:pointer; transition:all .15s; }
-  .edit-all-btn:hover { border-color:var(--accent); color:var(--accent); }
-  .fields-grid { display:grid; gap:11px; }
-  .field-row { display:grid; grid-template-columns:120px 1fr; gap:8px; align-items:start; }
-  .field-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; padding-top:10px; font-weight:500; }
-  .field-value { background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:14px; padding:8px 12px; width:100%; transition:border-color .2s; }
-  .field-value:focus { outline:none; border-color:var(--accent); }
-  textarea.field-value { resize:vertical; min-height:68px; line-height:1.55; }
-  .price-row { display:flex; gap:8px; }
-  .price-row .field-value { flex:1; }
-  .price-row .field-value.iva { max-width:96px; font-size:12px; }
-  .tags-wrap { display:flex; flex-wrap:wrap; gap:5px; padding:7px 10px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--rs); min-height:36px; align-items:center; }
-  .tag { background:var(--accent-soft); border:1px solid #7c6af733; color:var(--accent); border-radius:99px; font-size:11px; padding:2px 9px; font-weight:500; }
-  .divider { height:1px; background:var(--border); margin:18px 0; }
-  .action-row { display:flex; gap:10px; }
-  .btn-save { flex:1; background:var(--accent2); border:none; border-radius:var(--rs); color:#0a1f15; font-family:var(--font); font-size:14px; font-weight:600; padding:12px; cursor:pointer; transition:opacity .2s; }
-  .btn-save:hover { opacity:.85; }
-  .btn-retry { background:none; border:1px solid var(--border); border-radius:var(--rs); color:var(--muted); font-family:var(--font); font-size:14px; padding:12px 18px; cursor:pointer; transition:all .2s; }
-  .btn-retry:hover { border-color:var(--accent); color:var(--accent); }
-  .confidence-bar { display:flex; align-items:center; gap:10px; margin-top:14px; }
-  .conf-label { font-size:11px; color:var(--muted); }
-  .conf-track { flex:1; height:4px; background:var(--border); border-radius:99px; overflow:hidden; }
-  .conf-fill { height:100%; background:var(--accent2); border-radius:99px; transition:width .6s ease; width:0%; }
-  .conf-pct { font-size:11px; font-family:var(--mono); color:var(--accent2); min-width:32px; }
-  .error-msg { display:none; background:#f8717111; border:1px solid #f8717144; border-radius:var(--rs); color:var(--danger); font-size:13px; padding:11px 14px; margin-bottom:12px; width:100%; max-width:520px; }
+.sidebar-footer{
+  margin-top:auto;padding:12px 8px;border-top:1px solid var(--border);
+}
 
-  /* Botón secundario dentro de la card de foto */
-  .btn-reanalyze {
-    display:none; width:100%; margin-top:10px;
-    background:none; border:1px solid var(--border); border-radius:var(--rs);
-    color:var(--muted); font-family:var(--font); font-size:13px;
-    padding:9px; cursor:pointer; transition:all .2s; text-align:center;
-  }
-  .btn-reanalyze:hover { border-color:var(--accent); color:var(--accent); }
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh;}
+
+#topbar{
+  height:56px;min-height:56px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+  background:var(--sidebar);
+}
+.topbar-title{font-size:15px;font-weight:500;letter-spacing:-.01em;}
+.topbar-sub{font-size:12px;color:var(--muted);margin-left:2px;}
+.topbar-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
+
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  border-radius:8px;font-family:var(--font);font-size:13px;font-weight:500;
+  padding:7px 14px;cursor:pointer;transition:all .15s;border:none;
+}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{opacity:.88}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+
+#content{flex:1;overflow-y:auto;padding:28px 28px;}
+
+/* ── MÓDULOS ── */
+.module{display:none;animation:fadein .2s ease;}
+.module.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ── COMING SOON placeholder ── */
+.coming-soon{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:60vh;gap:16px;text-align:center;
+}
+.cs-icon{font-size:48px;opacity:.3}
+.cs-title{font-size:20px;font-weight:500;color:var(--muted)}
+.cs-sub{font-size:13px;color:var(--muted);opacity:.6;max-width:320px;line-height:1.6}
+.cs-badge{
+  background:var(--accent-soft);border:1px solid #7c6af733;
+  color:var(--accent);font-size:11px;padding:3px 12px;
+  border-radius:99px;font-weight:500;letter-spacing:.04em;
+}
+
+/* ── DASHBOARD WIDGETS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:18px 20px;
+}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-bottom:8px;}
+.stat-value{font-size:26px;font-weight:600;letter-spacing:-.02em;font-family:var(--mono);}
+.stat-delta{font-size:11px;margin-top:4px;}
+.stat-delta.up{color:var(--success)}
+.stat-delta.down{color:var(--danger)}
+
+.section-title{font-size:13px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;}
+
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px;}
+.quick-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  padding:16px;cursor:pointer;transition:border-color .15s,background .15s;
+  display:flex;align-items:center;gap:14px;
+}
+.quick-card:hover{border-color:var(--accent);background:var(--accent-soft)}
+.quick-icon{font-size:22px;width:42px;height:42px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.quick-name{font-size:13px;font-weight:500;}
+.quick-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── TABLA GENÉRICA ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+  padding:11px 16px;text-align:left;font-size:11px;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+  font-weight:500;border-bottom:1px solid var(--border);background:var(--surface2);
+}
+tbody td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--border);}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:99px;font-size:11px;font-weight:500;padding:2px 9px;}
+.badge-success{background:#34d39918;color:var(--success);}
+.badge-warn{background:#fbbf2418;color:var(--warn);}
+.badge-danger{background:#f8717118;color:var(--danger);}
+.badge-info{background:var(--accent-soft);color:var(--accent);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo-tag">POS Argentina · v4</div>
-  <h1>Carga de producto</h1>
-  <p>Fotografiá el producto — la IA lo identifica automáticamente.</p>
-</header>
-
-<!-- CARD 1: ENTRADA -->
-<div class="card">
-  <div class="card-title"><span class="dot"></span>1 · Identificación del producto</div>
-  <div class="input-tabs">
-    <button class="tab-btn active" onclick="switchTab('photo')">📷 Foto automática</button>
-    <button class="tab-btn" onclick="switchTab('barcode')">⬛ Código de barras</button>
-    <button class="tab-btn" onclick="switchTab('manual')">⌨ Manual</button>
+<!-- ══ SIDEBAR ══ -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="brand-logo">POS</div>
+    <div class="nav-text">
+      <div class="brand-name">POS Argentina</div>
+      <div class="brand-sub">v1.0 · Demo</div>
+    </div>
+    <button id="toggle-sidebar" onclick="toggleSidebar()" title="Colapsar menú">‹</button>
   </div>
 
-  <!-- TAB FOTO (ahora primero y por defecto) -->
-  <div class="tab-panel active" id="tab-photo">
-    <div id="drop-zone" onclick="document.getElementById('file-input').click()">
-      <div class="icon">📷</div>
-      <p><strong>Tocá para fotografiar el producto</strong></p>
-      <p style="margin-top:6px;font-size:12px;color:var(--muted);">La IA lee la imagen y completa la ficha automáticamente</p>
-    </div>
-    <div id="preview-wrap">
-      <img id="preview-img" src="" alt="preview">
-      <button class="remove-btn" onclick="removeImage()">✕</button>
-    </div>
-    <input type="file" id="file-input" accept="image/*" capture="environment">
+  <div style="overflow-y:auto;flex:1;padding-bottom:8px;">
 
-    <!-- Resultado de visión automática -->
-    <div id="vision-box">
-      <div class="vision-header">
-        <div class="pulse-dot" id="vision-dot"></div>
-        <span id="vision-label">Analizando imagen...</span>
-      </div>
-      <div id="vision-text"></div>
+    <div class="nav-section">
+      <div class="nav-label">Principal</div>
+      <button class="nav-item active" onclick="navigate('dashboard')">
+        <span class="nav-icon">⊞</span>
+        <span class="nav-text">Dashboard</span>
+      </button>
+      <button class="nav-item" onclick="navigate('pos')">
+        <span class="nav-icon">◈</span>
+        <span class="nav-text">Punto de venta</span>
+        <span class="nav-badge nav-text">LIVE</span>
+      </button>
     </div>
 
-    <button class="btn-reanalyze" id="btn-reanalyze" onclick="runVisionOnly()">
-      ↺ Volver a analizar imagen
+    <div class="nav-section">
+      <div class="nav-label">Gestión</div>
+      <button class="nav-item" onclick="navigate('productos')">
+        <span class="nav-icon">⬡</span>
+        <span class="nav-text">Productos</span>
+      </button>
+      <button class="nav-item" onclick="navigate('clientes')">
+        <span class="nav-icon">◯</span>
+        <span class="nav-text">Clientes</span>
+      </button>
+      <button class="nav-item" onclick="navigate('stock')">
+        <span class="nav-icon">▦</span>
+        <span class="nav-text">Stock</span>
+      </button>
+      <button class="nav-item" onclick="navigate('precios')">
+        <span class="nav-icon">◇</span>
+        <span class="nav-text">Precios y listas</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Facturación</div>
+      <button class="nav-item" onclick="navigate('facturacion')">
+        <span class="nav-icon">▤</span>
+        <span class="nav-text">Facturación AFIP</span>
+      </button>
+      <button class="nav-item" onclick="navigate('comprobantes')">
+        <span class="nav-icon">▥</span>
+        <span class="nav-text">Comprobantes</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Pagos</div>
+      <button class="nav-item" onclick="navigate('pagos')">
+        <span class="nav-icon">◈</span>
+        <span class="nav-text">Medios de pago</span>
+      </button>
+      <button class="nav-item" onclick="navigate('caja')">
+        <span class="nav-icon">▣</span>
+        <span class="nav-text">Caja</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Análisis</div>
+      <button class="nav-item" onclick="navigate('reportes')">
+        <span class="nav-icon">▲</span>
+        <span class="nav-text">Reportes</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Sistema</div>
+      <button class="nav-item" onclick="navigate('usuarios')">
+        <span class="nav-icon">◎</span>
+        <span class="nav-text">Usuarios y roles</span>
+      </button>
+      <button class="nav-item" onclick="navigate('configuracion')">
+        <span class="nav-icon">◉</span>
+        <span class="nav-text">Configuración</span>
+      </button>
+    </div>
+
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="nav-item" onclick="navigate('perfil')">
+      <span class="nav-icon">◎</span>
+      <span class="nav-text" style="display:flex;flex-direction:column;gap:1px;">
+        <span style="font-size:13px;color:var(--text)">Gastón AB</span>
+        <span style="font-size:11px;color:var(--muted)">Administrador</span>
+      </span>
     </button>
   </div>
+</nav>
 
-  <!-- TAB SCANNER -->
-  <div class="tab-panel" id="tab-barcode">
-    <div id="scanner-container">
-      <div id="scan-idle" style="text-align:center;padding:20px;">
-        <button id="scan-idle-btn" onclick="startScanner()">📷 Activar cámara</button>
-        <p style="font-size:12px;color:#ffffff88;margin-top:10px;">Apuntá al código de barras del producto</p>
-      </div>
-      <video id="scanner-video" style="display:none;" playsinline autoplay muted></video>
-      <div class="scan-ui" id="scan-ui" style="display:none;">
-        <div class="scan-box">
-          <div class="scan-line"></div>
-          <div class="sc tl"></div><div class="sc tr"></div>
-          <div class="sc bl"></div><div class="sc br"></div>
+<!-- ══ MAIN ══ -->
+<div id="main">
+  <div id="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-sub" id="topbar-sub">Resumen general del negocio</div>
+    </div>
+    <div class="topbar-actions" id="topbar-actions"></div>
+  </div>
+
+  <div id="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="module active" id="mod-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Ventas hoy</div>
+          <div class="stat-value" style="color:var(--success)">$84.200</div>
+          <div class="stat-delta up">↑ 12% vs ayer</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Transacciones</div>
+          <div class="stat-value">23</div>
+          <div class="stat-delta up">↑ 4 más que ayer</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ticket promedio</div>
+          <div class="stat-value">$3.661</div>
+          <div class="stat-delta down">↓ 3% vs ayer</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Productos en stock</div>
+          <div class="stat-value">142</div>
+          <div class="stat-delta" style="color:var(--warn)">⚠ 6 con stock bajo</div>
         </div>
       </div>
-      <div id="scan-msg" style="display:none;">Buscando código...</div>
-    </div>
-    <div class="bc-found" id="bc-found">
-      <span style="font-size:20px;">⬛</span>
-      <span class="bc-code" id="bc-text">—</span>
-      <button class="bc-clear" onclick="clearBarcode()">✕</button>
-    </div>
-  </div>
 
-  <!-- TAB MANUAL -->
-  <div class="tab-panel" id="tab-manual">
-    <input type="text" id="manual-code" placeholder="Código de barras (EAN, UPC, ISBN…)">
-    <p style="font-size:11px;color:var(--muted);margin-top:8px;">O completá la descripción abajo y la IA genera la ficha.</p>
-  </div>
-</div>
+      <div class="section-title">Accesos rápidos</div>
+      <div class="quick-grid">
+        <div class="quick-card" onclick="navigate('pos')">
+          <div class="quick-icon">◈</div>
+          <div><div class="quick-name">Nueva venta</div><div class="quick-desc">Abrir punto de venta</div></div>
+        </div>
+        <div class="quick-card" onclick="navigate('productos')">
+          <div class="quick-icon">⬡</div>
+          <div><div class="quick-name">Cargar producto</div><div class="quick-desc">Con foto + IA</div></div>
+        </div>
+        <div class="quick-card" onclick="navigate('facturacion')">
+          <div class="quick-icon">▤</div>
+          <div><div class="quick-name">Emitir factura</div><div class="quick-desc">AFIP electrónica</div></div>
+        </div>
+        <div class="quick-card" onclick="navigate('caja')">
+          <div class="quick-icon">▣</div>
+          <div><div class="quick-name">Cierre de caja</div><div class="quick-desc">Resumen del día</div></div>
+        </div>
+      </div>
 
-<!-- CARD 2: DESCRIPCIÓN -->
-<div class="card">
-  <div class="card-title"><span class="dot"></span>2 · Agregá más detalle (opcional)</div>
-  <textarea id="description" placeholder="La IA ya completó lo que vio. Podés agregar más info o corregir algo…"></textarea>
-  <div class="mic-row">
-    <button id="mic-btn" onclick="toggleMic()">🎤 Dictar</button>
-    <span class="mic-hint" id="mic-hint">Hablá después de presionar</span>
-  </div>
-</div>
-
-<div class="error-msg" id="error-msg"></div>
-
-<button id="analyze-btn" onclick="analyzeProduct()">
-  <span class="spinner" id="spinner"></span>
-  <span id="btn-text">✦ Generar ficha completa</span>
-</button>
-
-<!-- RESULTADO -->
-<div class="card" id="result-card">
-  <div class="result-header">
-    <div class="result-title">Ficha generada</div>
-    <button class="edit-all-btn" onclick="document.getElementById('f-nombre').focus()">Editar</button>
-  </div>
-  <div class="fields-grid">
-    <div class="field-row"><div class="field-label">Nombre</div><input class="field-value" type="text" id="f-nombre"></div>
-    <div class="field-row"><div class="field-label">Marca</div><input class="field-value" type="text" id="f-marca"></div>
-    <div class="field-row"><div class="field-label">Modelo</div><input class="field-value" type="text" id="f-modelo"></div>
-    <div class="field-row"><div class="field-label">Categoría</div><input class="field-value" type="text" id="f-categoria"></div>
-    <div class="field-row"><div class="field-label">Descripción</div><textarea class="field-value" id="f-descripcion"></textarea></div>
-    <div class="field-row"><div class="field-label">Cód. barras</div><input class="field-value" type="text" id="f-barcode" style="font-family:var(--mono);font-size:13px;"></div>
-    <div class="field-row"><div class="field-label">SKU</div><input class="field-value" type="text" id="f-sku"></div>
-    <div class="field-row">
-      <div class="field-label">Precio</div>
-      <div class="price-row">
-        <input class="field-value" type="text" id="f-precio" style="font-family:var(--mono);">
-        <input class="field-value iva" type="text" id="f-iva">
+      <div class="section-title">Últimas ventas</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Pago</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr><td style="font-family:var(--mono);font-size:12px;color:var(--muted)">#0023</td><td>María González</td><td>3 artículos</td><td style="font-family:var(--mono)">$12.400</td><td>Mercado Pago</td><td><span class="badge badge-success">Cobrado</span></td></tr>
+            <tr><td style="font-family:var(--mono);font-size:12px;color:var(--muted)">#0022</td><td>Consumidor final</td><td>1 artículo</td><td style="font-family:var(--mono)">$3.200</td><td>Efectivo</td><td><span class="badge badge-success">Cobrado</span></td></tr>
+            <tr><td style="font-family:var(--mono);font-size:12px;color:var(--muted)">#0021</td><td>Carlos Ruiz</td><td>5 artículos</td><td style="font-family:var(--mono)">$28.750</td><td>Tarjeta</td><td><span class="badge badge-success">Cobrado</span></td></tr>
+            <tr><td style="font-family:var(--mono);font-size:12px;color:var(--muted)">#0020</td><td>Laura Sánchez</td><td>2 artículos</td><td style="font-family:var(--mono)">$7.600</td><td>Transferencia</td><td><span class="badge badge-warn">Pendiente</span></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
-    <div class="field-row"><div class="field-label">Unidad</div><input class="field-value" type="text" id="f-unidad"></div>
-    <div class="field-row"><div class="field-label">Palabras clave</div><div class="tags-wrap" id="f-tags"></div></div>
-    <div class="field-row"><div class="field-label">Observaciones</div><textarea class="field-value" id="f-obs" style="min-height:52px;"></textarea></div>
-  </div>
-  <div class="confidence-bar">
-    <span class="conf-label">Confianza IA</span>
-    <div class="conf-track"><div class="conf-fill" id="conf-fill"></div></div>
-    <span class="conf-pct" id="conf-pct">—</span>
-  </div>
-  <div class="divider"></div>
-  <div class="action-row">
-    <button class="btn-save" onclick="saveProduct()">Guardar producto</button>
-    <button class="btn-retry" onclick="resetAll()">Nueva carga</button>
+
+    <!-- ══ PRODUCTOS ══ -->
+    <div class="module" id="mod-productos">
+      <div class="coming-soon">
+        <div class="cs-icon">⬡</div>
+        <div class="cs-badge">Módulo · Productos</div>
+        <div class="cs-title">Gestión de productos</div>
+        <div class="cs-sub">Catálogo completo, carga con IA + foto, códigos de barras, precios y stock por producto.</div>
+      </div>
+    </div>
+
+    <!-- ══ POS ══ -->
+    <div class="module" id="mod-pos">
+      <div class="coming-soon">
+        <div class="cs-icon">◈</div>
+        <div class="cs-badge">Módulo · Punto de venta</div>
+        <div class="cs-title">Punto de venta</div>
+        <div class="cs-sub">Caja rápida, búsqueda por código o nombre, múltiples medios de pago y emisión de comprobante al instante.</div>
+      </div>
+    </div>
+
+    <!-- ══ CLIENTES ══ -->
+    <div class="module" id="mod-clientes">
+      <div class="coming-soon">
+        <div class="cs-icon">◯</div>
+        <div class="cs-badge">Módulo · Clientes</div>
+        <div class="cs-title">Gestión de clientes</div>
+        <div class="cs-sub">Alta de clientes, historial de compras, CUIT/DNI, condición fiscal y CRM básico.</div>
+      </div>
+    </div>
+
+    <!-- ══ STOCK ══ -->
+    <div class="module" id="mod-stock">
+      <div class="coming-soon">
+        <div class="cs-icon">▦</div>
+        <div class="cs-badge">Módulo · Stock</div>
+        <div class="cs-title">Control de stock</div>
+        <div class="cs-sub">Inventario en tiempo real, alertas de stock mínimo, movimientos y ajustes de inventario.</div>
+      </div>
+    </div>
+
+    <!-- ══ PRECIOS ══ -->
+    <div class="module" id="mod-precios">
+      <div class="coming-soon">
+        <div class="cs-icon">◇</div>
+        <div class="cs-badge">Módulo · Precios</div>
+        <div class="cs-title">Precios y listas</div>
+        <div class="cs-sub">Listas de precio por cliente o canal, actualizaciones masivas, precios por cantidad y descuentos.</div>
+      </div>
+    </div>
+
+    <!-- ══ FACTURACIÓN ══ -->
+    <div class="module" id="mod-facturacion">
+      <div class="coming-soon">
+        <div class="cs-icon">▤</div>
+        <div class="cs-badge">Módulo · AFIP</div>
+        <div class="cs-title">Facturación electrónica</div>
+        <div class="cs-sub">Emisión de facturas A, B y C, CAE online/offline, notas de crédito y envío automático al cliente.</div>
+      </div>
+    </div>
+
+    <!-- ══ COMPROBANTES ══ -->
+    <div class="module" id="mod-comprobantes">
+      <div class="coming-soon">
+        <div class="cs-icon">▥</div>
+        <div class="cs-badge">Módulo · Comprobantes</div>
+        <div class="cs-title">Comprobantes emitidos</div>
+        <div class="cs-sub">Historial completo de facturas, notas de crédito y débito con descarga en PDF.</div>
+      </div>
+    </div>
+
+    <!-- ══ PAGOS ══ -->
+    <div class="module" id="mod-pagos">
+      <div class="coming-soon">
+        <div class="cs-icon">◈</div>
+        <div class="cs-badge">Módulo · Pagos</div>
+        <div class="cs-title">Medios de pago</div>
+        <div class="cs-sub">Efectivo, tarjetas, transferencias, QR Mercado Pago y billeteras virtuales. Configuración de cada medio.</div>
+      </div>
+    </div>
+
+    <!-- ══ CAJA ══ -->
+    <div class="module" id="mod-caja">
+      <div class="coming-soon">
+        <div class="cs-icon">▣</div>
+        <div class="cs-badge">Módulo · Caja</div>
+        <div class="cs-title">Gestión de caja</div>
+        <div class="cs-sub">Apertura y cierre de caja, desglose por medio de pago, diferencias y arqueo.</div>
+      </div>
+    </div>
+
+    <!-- ══ REPORTES ══ -->
+    <div class="module" id="mod-reportes">
+      <div class="coming-soon">
+        <div class="cs-icon">▲</div>
+        <div class="cs-badge">Módulo · Reportes</div>
+        <div class="cs-title">Reportes y análisis</div>
+        <div class="cs-sub">Ventas por período, por producto, por cliente, márgenes, ranking y exportación a Excel.</div>
+      </div>
+    </div>
+
+    <!-- ══ USUARIOS ══ -->
+    <div class="module" id="mod-usuarios">
+      <div class="coming-soon">
+        <div class="cs-icon">◎</div>
+        <div class="cs-badge">Módulo · Usuarios</div>
+        <div class="cs-title">Usuarios y roles</div>
+        <div class="cs-sub">Alta de operadores, roles (admin, cajero, vendedor), permisos por módulo y auditoría de acciones.</div>
+      </div>
+    </div>
+
+    <!-- ══ CONFIGURACIÓN ══ -->
+    <div class="module" id="mod-configuracion">
+      <div class="coming-soon">
+        <div class="cs-icon">◉</div>
+        <div class="cs-badge">Módulo · Configuración</div>
+        <div class="cs-title">Configuración del sistema</div>
+        <div class="cs-sub">Datos del negocio, CUIT, punto de venta AFIP, certificados digitales, integraciones y preferencias.</div>
+      </div>
+    </div>
+
+    <!-- ══ PERFIL ══ -->
+    <div class="module" id="mod-perfil">
+      <div class="coming-soon">
+        <div class="cs-icon">◎</div>
+        <div class="cs-badge">Módulo · Perfil</div>
+        <div class="cs-title">Mi perfil</div>
+        <div class="cs-sub">Datos personales, cambio de contraseña y preferencias de la cuenta.</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
-let imageBase64 = null;
-let scannedBarcode = null;
-let scanStream = null;
-let scanInterval = null;
-let recognition = null;
-let isRecording = false;
-let visionDescription = '';
+const modules = {
+  dashboard:     { title:'Dashboard',           sub:'Resumen general del negocio' },
+  pos:           { title:'Punto de venta',       sub:'Caja y cobros' },
+  productos:     { title:'Productos',            sub:'Catálogo y carga con IA' },
+  clientes:      { title:'Clientes',             sub:'Gestión de clientes y CRM' },
+  stock:         { title:'Stock',                sub:'Control de inventario' },
+  precios:       { title:'Precios y listas',     sub:'Gestión de precios' },
+  facturacion:   { title:'Facturación AFIP',     sub:'Comprobantes electrónicos' },
+  comprobantes:  { title:'Comprobantes',         sub:'Historial de facturas' },
+  pagos:         { title:'Medios de pago',       sub:'Configuración de pagos' },
+  caja:          { title:'Caja',                 sub:'Apertura y cierre de caja' },
+  reportes:      { title:'Reportes',             sub:'Análisis y estadísticas' },
+  usuarios:      { title:'Usuarios y roles',     sub:'Gestión de accesos' },
+  configuracion: { title:'Configuración',        sub:'Ajustes del sistema' },
+  perfil:        { title:'Mi perfil',            sub:'Datos de la cuenta' },
+};
 
-// ── TABS
-function switchTab(tab) {
-  ['photo','barcode','manual'].forEach((t,i) => {
-    document.querySelectorAll('.tab-btn')[i].classList.toggle('active', t===tab);
-    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+let current = 'dashboard';
+
+function navigate(mod) {
+  if (!modules[mod]) return;
+  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('mod-' + mod).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') === `navigate('${mod}')`) n.classList.add('active');
   });
-  if (tab !== 'barcode') stopScanner();
+  document.getElementById('topbar-title').textContent = modules[mod].title;
+  document.getElementById('topbar-sub').textContent   = modules[mod].sub;
+  current = mod;
 }
 
-// ── FOTO + ANÁLISIS AUTOMÁTICO DE VISIÓN
-document.getElementById('file-input').addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    imageBase64 = ev.target.result.split(',')[1];
-    document.getElementById('preview-img').src = ev.target.result;
-    document.getElementById('drop-zone').style.display = 'none';
-    document.getElementById('preview-wrap').style.display = 'block';
-    document.getElementById('btn-reanalyze').style.display = 'block';
-    // Disparar análisis de visión automáticamente
-    await runVisionOnly();
-  };
-  reader.readAsDataURL(file);
-});
-
-async function runVisionOnly() {
-  if (!imageBase64) return;
-  hideError();
-
-  const box = document.getElementById('vision-box');
-  const dot = document.getElementById('vision-dot');
-  const label = document.getElementById('vision-label');
-  const textEl = document.getElementById('vision-text');
-
-  box.style.display = 'block';
-  dot.className = 'pulse-dot';
-  label.textContent = 'Analizando imagen...';
-  textEl.textContent = '';
-  textEl.className = 'vision-typing';
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 400,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
-            { type: 'text', text: `Analizá esta imagen de un producto. Describí en 2-3 oraciones en español rioplatense informal lo que ves: qué producto es, marca visible, modelo si lo ves, color, tamaño estimado, cualquier texto del packaging que se lea. Sé directo y específico, como si le dijeras a alguien qué producto tiene en la mano. No uses listas, solo texto corrido.` }
-          ]
-        }]
-      })
-    });
-
-    const data = await res.json();
-    const desc = data.content.map(b => b.text || '').join('').trim();
-    visionDescription = desc;
-
-    // Efecto de escritura progresiva
-    textEl.className = '';
-    textEl.textContent = '';
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < desc.length) {
-        textEl.textContent += desc[i++];
-      } else {
-        clearInterval(interval);
-        dot.className = 'pulse-dot done';
-        label.textContent = 'Imagen analizada';
-        // Pre-llenar el textarea de descripción
-        const ta = document.getElementById('description');
-        if (!ta.value.trim()) ta.value = desc;
-      }
-    }, 12);
-
-  } catch(err) {
-    box.style.display = 'none';
-    visionDescription = '';
-    console.error(err);
-  }
+let sidebarCollapsed = false;
+function toggleSidebar() {
+  sidebarCollapsed = !sidebarCollapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed', sidebarCollapsed);
+  document.getElementById('toggle-sidebar').textContent = sidebarCollapsed ? '›' : '‹';
 }
 
-function removeImage() {
-  imageBase64 = null;
-  visionDescription = '';
-  document.getElementById('file-input').value = '';
-  document.getElementById('preview-wrap').style.display = 'none';
-  document.getElementById('drop-zone').style.display = 'block';
-  document.getElementById('vision-box').style.display = 'none';
-  document.getElementById('btn-reanalyze').style.display = 'none';
-  document.getElementById('vision-text').textContent = '';
-  document.getElementById('description').value = '';
-}
-
-// ── SCANNER
-async function startScanner() {
-  hideError();
-  try {
-    scanStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
-    const video = document.getElementById('scanner-video');
-    video.srcObject = scanStream;
-    await video.play();
-    document.getElementById('scan-idle').style.display = 'none';
-    video.style.display = 'block';
-    document.getElementById('scan-ui').style.display = 'flex';
-    document.getElementById('scan-msg').style.display = 'block';
-
-    if ('BarcodeDetector' in window) {
-      const detector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e','itf','data_matrix'] });
-      scanInterval = setInterval(async () => {
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          try {
-            const barcodes = await detector.detect(video);
-            if (barcodes.length > 0) onBarcodeFound(barcodes[0].rawValue);
-          } catch(e) {}
-        }
-      }, 300);
-    } else {
-      loadZXing();
-    }
-  } catch(err) {
-    if (err.name === 'NotAllowedError') {
-      showError('Permiso de cámara denegado. Tocá el candado 🔒 en la barra de la URL → Permisos → Cámara → Permitir, y recargá.');
-    } else {
-      showError('No se pudo iniciar la cámara: ' + err.message);
-    }
-    resetScanUI();
-  }
-}
-
-function loadZXing() {
-  if (window._zxingLoading) return;
-  window._zxingLoading = true;
-  const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js';
-  s.onload = () => {
-    const video = document.getElementById('scanner-video');
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    const reader = new ZXing.BrowserMultiFormatReader(hints, { delayBetweenScanAttempts:250 });
-    window._zxingReader = reader;
-    reader.decodeFromVideoElement(video, (result) => { if (result) onBarcodeFound(result.getText()); });
-  };
-  document.head.appendChild(s);
-}
-
-function onBarcodeFound(code) {
-  stopScanner();
-  scannedBarcode = code;
-  document.getElementById('bc-text').textContent = code;
-  document.getElementById('bc-found').style.display = 'flex';
-  if (navigator.vibrate) navigator.vibrate(100);
-}
-
-function stopScanner() {
-  if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
-  if (window._zxingReader) { try { window._zxingReader.reset(); } catch(e){} window._zxingReader = null; window._zxingLoading = false; }
-  if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
-  resetScanUI();
-}
-
-function resetScanUI() {
-  const v = document.getElementById('scanner-video');
-  v.style.display = 'none'; v.srcObject = null;
-  document.getElementById('scan-ui').style.display = 'none';
-  document.getElementById('scan-msg').style.display = 'none';
-  document.getElementById('scan-idle').style.display = 'block';
-}
-
-function clearBarcode() {
-  scannedBarcode = null;
-  document.getElementById('bc-found').style.display = 'none';
-}
-
-// ── MICRÓFONO
-function toggleMic() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError('El dictado requiere Chrome.'); return; }
-  if (isRecording) { recognition && recognition.stop(); return; }
-  recognition = new SR();
-  recognition.lang = 'es-AR'; recognition.continuous = false; recognition.interimResults = false;
-  recognition.onstart = () => {
-    isRecording = true;
-    document.getElementById('mic-btn').classList.add('recording');
-    document.getElementById('mic-btn').textContent = '⏹ Detener';
-    document.getElementById('mic-hint').textContent = 'Escuchando...';
-  };
-  recognition.onresult = e => {
-    const t = e.results[0][0].transcript;
-    const ta = document.getElementById('description');
-    ta.value = (ta.value ? ta.value + ' ' : '') + t;
-  };
-  recognition.onend = recognition.onerror = () => {
-    isRecording = false;
-    document.getElementById('mic-btn').classList.remove('recording');
-    document.getElementById('mic-btn').innerHTML = '🎤 Dictar';
-    document.getElementById('mic-hint').textContent = 'Hablá después de presionar';
-  };
-  recognition.start();
-}
-
-// ── GENERAR FICHA COMPLETA
-async function analyzeProduct() {
-  const desc = document.getElementById('description').value.trim();
-  const manualCode = document.getElementById('manual-code').value.trim();
-  const barcode = scannedBarcode || manualCode;
-
-  if (!imageBase64 && !barcode && !desc) {
-    showError('Fotografiá el producto, escaneá el código o escribí una descripción.');
-    return;
-  }
-  hideError();
-  setBusy(true);
-
-  const content = [];
-  if (imageBase64) {
-    content.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data:imageBase64 } });
-  }
-
-  const visionCtx = visionDescription ? `\nLo que la IA vio en la imagen: "${visionDescription}"` : '';
-  const barcodeCtx = barcode ? `\nCódigo de barras: ${barcode}` : '';
-  const descCtx = desc ? `\nDescripción del operador: "${desc}"` : '';
-
-  const prompt = `Sos un asistente experto en gestión de inventario para negocios en Argentina.
-Analizá toda la información disponible y generá una ficha de producto completa y precisa.
-${visionCtx}${barcodeCtx}${descCtx}
-
-Usá la imagen (si está disponible) como fuente primaria. Leé todo el texto visible en el packaging: nombre, marca, modelo, contenido neto, país de origen, advertencias, ingredientes si aplica.
-
-Respondé ÚNICAMENTE con este JSON válido, sin markdown ni texto adicional:
-{
-  "nombre": "nombre comercial completo tal como figura en el packaging",
-  "marca": "marca del fabricante",
-  "modelo": "modelo, variante o referencia específica",
-  "categoria": "categoría del producto",
-  "descripcion": "descripción de venta atractiva, 2-3 oraciones en español rioplatense, orientada al comprador",
-  "barcode": "${barcode || ''}",
-  "sku": "SKU sugerido formato AAA-00000",
-  "precio_sugerido": "número entero sin símbolo ni puntos",
-  "alicuota_iva": "10.5 o 21 según corresponda en Argentina",
-  "unidad_venta": "Unidad / Par / Kg / Litro / Caja x12 / etc.",
-  "palabras_clave": ["kw1","kw2","kw3","kw4"],
-  "observaciones": "contenido neto, país de origen, garantía, SENASA si aplica, vencimiento si es alimento, etc.",
-  "confianza": número entre 55 y 99
-}`;
-
-  content.push({ type:'text', text:prompt });
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content }] })
-    });
-    const data = await res.json();
-    const raw = data.content.map(b => b.text||'').join('');
-    const product = JSON.parse(raw.replace(/```json|```/g,'').trim());
-    renderResult(product, barcode);
-  } catch(err) {
-    showError('No se pudo generar la ficha. Verificá tu conexión e intentá de nuevo.');
-    console.error(err);
-  } finally {
-    setBusy(false);
-  }
-}
-
-function renderResult(p, barcode) {
-  document.getElementById('f-nombre').value      = p.nombre || '';
-  document.getElementById('f-marca').value       = p.marca || '';
-  document.getElementById('f-modelo').value      = p.modelo || '';
-  document.getElementById('f-categoria').value   = p.categoria || '';
-  document.getElementById('f-descripcion').value = p.descripcion || '';
-  document.getElementById('f-barcode').value     = barcode || p.barcode || '';
-  document.getElementById('f-sku').value         = p.sku || '';
-  document.getElementById('f-precio').value      = p.precio_sugerido ? '$ ' + Number(p.precio_sugerido).toLocaleString('es-AR') : '';
-  document.getElementById('f-iva').value         = 'IVA ' + (p.alicuota_iva||'21') + '%';
-  document.getElementById('f-unidad').value      = p.unidad_venta || '';
-  document.getElementById('f-obs').value         = p.observaciones || '';
-  const tw = document.getElementById('f-tags');
-  tw.innerHTML = '';
-  (p.palabras_clave||[]).forEach(t => { const s=document.createElement('span'); s.className='tag'; s.textContent=t; tw.appendChild(s); });
-  const conf = Math.min(99, Math.max(55, parseInt(p.confianza)||80));
-  document.getElementById('conf-fill').style.width = conf+'%';
-  document.getElementById('conf-pct').textContent  = conf+'%';
-  const rc = document.getElementById('result-card');
-  rc.style.display = 'block';
-  setTimeout(() => rc.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
-}
-
-function saveProduct() {
-  const n = document.getElementById('f-nombre').value;
-  alert('✓ Producto "' + n + '" guardado.\n(En producción: POST /api/productos)');
-}
-
-function resetAll() {
-  removeImage(); clearBarcode(); stopScanner();
-  document.getElementById('description').value = '';
-  document.getElementById('manual-code').value = '';
-  document.getElementById('result-card').style.display = 'none';
-  hideError();
-  window.scrollTo({ top:0, behavior:'smooth' });
-}
-
-function setBusy(b) {
-  document.getElementById('analyze-btn').disabled = b;
-  document.getElementById('spinner').style.display = b ? 'block' : 'none';
-  document.getElementById('btn-text').textContent = b ? 'Generando ficha…' : '✦ Generar ficha completa';
-}
-
-function showError(msg) { const e=document.getElementById('error-msg'); e.textContent=msg; e.style.display='block'; }
-function hideError() { document.getElementById('error-msg').style.display='none'; }
+// Responsive: colapsar sidebar en mobile
+if (window.innerWidth < 768) toggleSidebar();
 </script>
 </body>
 </html>
