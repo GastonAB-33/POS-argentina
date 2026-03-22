@@ -674,12 +674,163 @@ tbody tr:hover td{background:var(--surface2)}
 
     <!-- ══ CLIENTES ══ -->
     <div class="module" id="mod-clientes">
-      <div class="coming-soon">
-        <div class="cs-icon">◯</div>
-        <div class="cs-badge">Módulo · Clientes</div>
-        <div class="cs-title">Gestión de clientes</div>
-        <div class="cs-sub">Alta de clientes, historial de compras, CUIT/DNI, condición fiscal y CRM básico.</div>
+
+      <!-- LISTADO -->
+      <div id="cli-list-view">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+          <input type="text" id="cli-search" placeholder="Buscar por nombre, CUIT, email…" oninput="filterClientes()"
+            style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:9px 14px;outline:none;transition:border-color .2s;"
+            onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+          <select id="cli-filter-cond" onchange="filterClientes()"
+            style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:9px 12px;outline:none;cursor:pointer;">
+            <option value="">Todas las condiciones</option>
+            <option>Consumidor final</option>
+            <option>Responsable inscripto</option>
+            <option>Monotributista</option>
+            <option>Exento</option>
+          </select>
+          <button class="btn btn-primary" onclick="showNewCliente()">+ Nuevo cliente</button>
+        </div>
+
+        <!-- Stats rápidas -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;" id="cli-stats">
+          <div class="stat-card"><div class="stat-label">Total clientes</div><div class="stat-value" id="cli-stat-total">0</div></div>
+          <div class="stat-card"><div class="stat-label">Resp. inscriptos</div><div class="stat-value" id="cli-stat-ri">0</div></div>
+          <div class="stat-card"><div class="stat-label">Monotributistas</div><div class="stat-value" id="cli-stat-mono">0</div></div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre / Razón social</th><th>CUIT / DNI</th><th>Condición fiscal</th><th>Email</th><th>Teléfono</th><th>Compras</th><th></th></tr></thead>
+            <tbody id="cli-tbody"></tbody>
+          </table>
+        </div>
+        <div id="cli-empty" style="display:none;text-align:center;padding:48px;color:var(--muted);font-size:13px;">
+          No se encontraron clientes. <span style="color:var(--accent);cursor:pointer;" onclick="showNewCliente()">Agregá el primero →</span>
+        </div>
       </div>
+
+      <!-- FORMULARIO -->
+      <div id="cli-form-view" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+          <button onclick="showCliListView()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:7px 14px;cursor:pointer;">← Volver</button>
+          <div>
+            <div style="font-size:15px;font-weight:500;" id="cli-form-title">Nuevo cliente</div>
+            <div style="font-size:12px;color:var(--muted);">Completá los datos del cliente</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+          <!-- Datos principales -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:500;">Datos principales</div>
+
+            <div style="display:grid;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">Nombre / Razón social *</div>
+                <input class="cli-field" id="clf-nombre" type="text" placeholder="Juan Pérez / Empresa S.A.">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">CUIT / DNI</div>
+                  <input class="cli-field" id="clf-cuit" type="text" placeholder="20-12345678-9">
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">Condición fiscal</div>
+                  <select class="cli-field" id="clf-condicion" style="cursor:pointer;">
+                    <option>Consumidor final</option>
+                    <option>Responsable inscripto</option>
+                    <option>Monotributista</option>
+                    <option>Exento</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">Teléfono</div>
+                  <input class="cli-field" id="clf-tel" type="tel" placeholder="+54 9 11 1234-5678">
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">Email</div>
+                  <input class="cli-field" id="clf-email" type="email" placeholder="email@ejemplo.com">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dirección y notas -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:500;">Dirección y notas</div>
+            <div style="display:grid;gap:10px;">
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">Dirección</div>
+                <input class="cli-field" id="clf-dir" type="text" placeholder="Av. Corrientes 1234, CABA">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">Localidad</div>
+                  <input class="cli-field" id="clf-loc" type="text" placeholder="Buenos Aires">
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">Provincia</div>
+                  <select class="cli-field" id="clf-prov" style="cursor:pointer;">
+                    <option value="">—</option>
+                    <option>Buenos Aires</option><option>CABA</option>
+                    <option>Córdoba</option><option>Santa Fe</option>
+                    <option>Mendoza</option><option>Tucumán</option>
+                    <option>Entre Ríos</option><option>Salta</option>
+                    <option>Misiones</option><option>Chaco</option>
+                    <option>Corrientes</option><option>Santiago del Estero</option>
+                    <option>San Juan</option><option>Jujuy</option>
+                    <option>Río Negro</option><option>Neuquén</option>
+                    <option>Formosa</option><option>Chubut</option>
+                    <option>San Luis</option><option>Catamarca</option>
+                    <option>La Rioja</option><option>La Pampa</option>
+                    <option>Santa Cruz</option><option>Tierra del Fuego</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:5px;">Notas internas</div>
+                <textarea class="cli-field" id="clf-notas" placeholder="Observaciones, preferencias, condiciones especiales…" style="resize:none;height:80px;line-height:1.6;"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button onclick="saveCliente()"
+            style="background:var(--success);border:none;border-radius:8px;color:#0a1f15;font-family:var(--font);font-size:14px;font-weight:600;padding:12px 28px;cursor:pointer;">
+            Guardar cliente
+          </button>
+          <button onclick="showCliListView()"
+            style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:12px 20px;cursor:pointer;">
+            Cancelar
+          </button>
+        </div>
+      </div>
+
+      <!-- VISTA DETALLE -->
+      <div id="cli-detail-view" style="display:none;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+          <button onclick="showCliListView()" style="background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:13px;padding:7px 14px;cursor:pointer;">← Volver</button>
+          <div style="font-size:15px;font-weight:500;" id="cli-detail-nombre">—</div>
+          <button onclick="editCurrentCliente()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:12px;padding:6px 14px;cursor:pointer;">Editar</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:500;margin-bottom:14px;">Ficha del cliente</div>
+            <div id="cli-detail-ficha" style="display:grid;gap:10px;font-size:13px;"></div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:500;margin-bottom:14px;">Historial de compras</div>
+            <div id="cli-detail-ventas" style="font-size:13px;color:var(--muted);">Sin compras registradas.</div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ══ STOCK ══ -->
@@ -1301,6 +1452,234 @@ document.addEventListener('click', e=>{
 
 // ══ FIN POS ══
 
+// ══ CLIENTES MODULE ══
+let clientes = JSON.parse(localStorage.getItem('pos_clientes')||'[]');
+let editingCliId = null;
+let currentCliId = null;
+
+document.head.insertAdjacentHTML('beforeend',`<style>
+.cli-field{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:9px 12px;width:100%;outline:none;transition:border-color .2s;}
+.cli-field:focus{border-color:var(--accent);}
+</style>`);
+
+function showNewCliente() {
+  editingCliId = null;
+  clearCliForm();
+  document.getElementById('cli-form-title').textContent = 'Nuevo cliente';
+  document.getElementById('cli-list-view').style.display = 'none';
+  document.getElementById('cli-detail-view').style.display = 'none';
+  document.getElementById('cli-form-view').style.display = 'block';
+  document.getElementById('topbar-actions').innerHTML =
+    '<button class="btn btn-ghost" onclick="showCliListView()">← Volver</button>';
+}
+
+function showCliListView() {
+  document.getElementById('cli-form-view').style.display = 'none';
+  document.getElementById('cli-detail-view').style.display = 'none';
+  document.getElementById('cli-list-view').style.display = 'block';
+  document.getElementById('topbar-actions').innerHTML =
+    '<button class="btn btn-primary" onclick="showNewCliente()">+ Nuevo cliente</button>';
+  renderClientes();
+}
+
+function showCliDetail(id) {
+  const c = clientes.find(x=>x.id===id); if(!c) return;
+  currentCliId = id;
+  document.getElementById('cli-list-view').style.display = 'none';
+  document.getElementById('cli-form-view').style.display = 'none';
+  document.getElementById('cli-detail-view').style.display = 'block';
+  document.getElementById('cli-detail-nombre').textContent = c.nombre;
+  document.getElementById('topbar-actions').innerHTML =
+    '<button class="btn btn-ghost" onclick="showCliListView()">← Volver</button>';
+
+  const condBadge = {
+    'Consumidor final':'badge-info','Responsable inscripto':'badge-success',
+    'Monotributista':'badge-warn','Exento':'badge-danger'
+  };
+  const ficha = document.getElementById('cli-detail-ficha');
+  const rows = [
+    ['CUIT / DNI', c.cuit||'—'],
+    ['Condición', `<span class="badge ${condBadge[c.condicion]||'badge-info'}">${c.condicion||'—'}</span>`],
+    ['Teléfono', c.tel||'—'],
+    ['Email', c.email||'—'],
+    ['Dirección', [c.dir,c.loc,c.prov].filter(Boolean).join(', ')||'—'],
+    ['Notas', c.notas||'—'],
+  ];
+  ficha.innerHTML = rows.map(([label,val])=>`
+    <div style="display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:start;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500;padding-top:2px;">${label}</span>
+      <span>${val}</span>
+    </div>`).join('');
+
+  // Historial de compras
+  const ventas = JSON.parse(localStorage.getItem('pos_ventas')||'[]');
+  const miVentas = ventas.filter(v=>v.cliente===c.nombre);
+  const det = document.getElementById('cli-detail-ventas');
+  if (!miVentas.length) {
+    det.innerHTML = '<div style="color:var(--muted);font-size:13px;">Sin compras registradas.</div>';
+  } else {
+    const total = miVentas.reduce((s,v)=>s+v.total,0);
+    det.innerHTML = `
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px;">
+        <span style="color:var(--muted);">${miVentas.length} compra${miVentas.length>1?'s':''}</span>
+        <span style="font-family:var(--mono);color:var(--success);font-weight:500;">Total: $ ${total.toLocaleString('es-AR')}</span>
+      </div>` +
+      miVentas.slice(0,8).map(v=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;">
+          <div>
+            <div style="font-weight:500;">#${v.num}</div>
+            <div style="color:var(--muted);">${v.fecha}</div>
+          </div>
+          <span style="font-family:var(--mono);color:var(--success);">$ ${v.total.toLocaleString('es-AR')}</span>
+        </div>`).join('');
+  }
+}
+
+function editCurrentCliente() {
+  const c = clientes.find(x=>x.id===currentCliId); if(!c) return;
+  editingCliId = c.id;
+  document.getElementById('clf-nombre').value   = c.nombre||'';
+  document.getElementById('clf-cuit').value     = c.cuit||'';
+  document.getElementById('clf-condicion').value= c.condicion||'Consumidor final';
+  document.getElementById('clf-tel').value      = c.tel||'';
+  document.getElementById('clf-email').value    = c.email||'';
+  document.getElementById('clf-dir').value      = c.dir||'';
+  document.getElementById('clf-loc').value      = c.loc||'';
+  document.getElementById('clf-prov').value     = c.prov||'';
+  document.getElementById('clf-notas').value    = c.notas||'';
+  document.getElementById('cli-form-title').textContent = 'Editar cliente';
+  document.getElementById('cli-detail-view').style.display = 'none';
+  document.getElementById('cli-form-view').style.display = 'block';
+}
+
+function saveCliente() {
+  const nombre = document.getElementById('clf-nombre').value.trim();
+  if (!nombre) { alert('El nombre es obligatorio.'); return; }
+  const c = {
+    id: editingCliId||'C'+Date.now(),
+    nombre,
+    cuit:     document.getElementById('clf-cuit').value.trim(),
+    condicion:document.getElementById('clf-condicion').value,
+    tel:      document.getElementById('clf-tel').value.trim(),
+    email:    document.getElementById('clf-email').value.trim(),
+    dir:      document.getElementById('clf-dir').value.trim(),
+    loc:      document.getElementById('clf-loc').value.trim(),
+    prov:     document.getElementById('clf-prov').value,
+    notas:    document.getElementById('clf-notas').value.trim(),
+  };
+  if (editingCliId) {
+    const i = clientes.findIndex(x=>x.id===editingCliId);
+    if (i>=0) clientes[i]=c;
+  } else {
+    clientes.unshift(c);
+  }
+  localStorage.setItem('pos_clientes', JSON.stringify(clientes));
+  syncClientesAlPOS();
+  showCliListView();
+}
+
+function deleteCliente(id) {
+  if (!confirm('¿Eliminar este cliente?')) return;
+  clientes = clientes.filter(c=>c.id!==id);
+  localStorage.setItem('pos_clientes', JSON.stringify(clientes));
+  syncClientesAlPOS();
+  renderClientes();
+}
+
+function clearCliForm() {
+  ['clf-nombre','clf-cuit','clf-tel','clf-email','clf-dir','clf-loc','clf-notas'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  const cond=document.getElementById('clf-condicion'); if(cond) cond.value='Consumidor final';
+  const prov=document.getElementById('clf-prov'); if(prov) prov.value='';
+}
+
+function filterClientes() { renderClientes(); }
+
+function renderClientes() {
+  const q = (document.getElementById('cli-search').value||'').toLowerCase();
+  const cond = document.getElementById('cli-filter-cond').value;
+  const filtered = clientes.filter(c => {
+    const matchQ = !q || (c.nombre+c.cuit+c.email+c.tel).toLowerCase().includes(q);
+    return matchQ && (!cond || c.condicion===cond);
+  });
+
+  // Stats
+  document.getElementById('cli-stat-total').textContent = clientes.length;
+  document.getElementById('cli-stat-ri').textContent = clientes.filter(c=>c.condicion==='Responsable inscripto').length;
+  document.getElementById('cli-stat-mono').textContent = clientes.filter(c=>c.condicion==='Monotributista').length;
+
+  const condBadge = {
+    'Consumidor final':'badge-info','Responsable inscripto':'badge-success',
+    'Monotributista':'badge-warn','Exento':'badge-danger'
+  };
+  const tbody = document.getElementById('cli-tbody');
+  tbody.innerHTML = '';
+  document.getElementById('cli-empty').style.display = filtered.length?'none':'block';
+
+  // Contar ventas por cliente
+  const ventas = JSON.parse(localStorage.getItem('pos_ventas')||'[]');
+
+  filtered.forEach(c => {
+    const nVentas = ventas.filter(v=>v.cliente===c.nombre).length;
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.onclick = ()=>showCliDetail(c.id);
+    tr.innerHTML = `
+      <td style="font-weight:500;">${c.nombre}</td>
+      <td style="font-family:var(--mono);font-size:12px;color:var(--muted);">${c.cuit||'—'}</td>
+      <td><span class="badge ${condBadge[c.condicion]||'badge-info'}">${c.condicion||'—'}</span></td>
+      <td style="font-size:12px;color:var(--muted);">${c.email||'—'}</td>
+      <td style="font-size:12px;color:var(--muted);">${c.tel||'—'}</td>
+      <td style="text-align:center;"><span class="badge ${nVentas>0?'badge-success':'badge-info'}">${nVentas}</span></td>
+      <td style="display:flex;gap:6px;" onclick="event.stopPropagation()">
+        <button onclick="editClienteDirecto('${c.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:4px 10px;cursor:pointer;">Editar</button>
+        <button onclick="deleteCliente('${c.id}')"
+          style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;padding:4px 10px;cursor:pointer;">✕</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function editClienteDirecto(id) {
+  const c = clientes.find(x=>x.id===id); if(!c) return;
+  editingCliId = id; currentCliId = id;
+  document.getElementById('clf-nombre').value    = c.nombre||'';
+  document.getElementById('clf-cuit').value      = c.cuit||'';
+  document.getElementById('clf-condicion').value = c.condicion||'Consumidor final';
+  document.getElementById('clf-tel').value       = c.tel||'';
+  document.getElementById('clf-email').value     = c.email||'';
+  document.getElementById('clf-dir').value       = c.dir||'';
+  document.getElementById('clf-loc').value       = c.loc||'';
+  document.getElementById('clf-prov').value      = c.prov||'';
+  document.getElementById('clf-notas').value     = c.notas||'';
+  document.getElementById('cli-form-title').textContent = 'Editar cliente';
+  document.getElementById('cli-list-view').style.display = 'none';
+  document.getElementById('cli-detail-view').style.display = 'none';
+  document.getElementById('cli-form-view').style.display = 'block';
+  document.getElementById('topbar-actions').innerHTML = '<button class="btn btn-ghost" onclick="showCliListView()">← Volver</button>';
+}
+
+// Sincronizar clientes al selector del POS
+function syncClientesAlPOS() {
+  const sel = document.getElementById('pos-cliente');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Consumidor final</option>';
+  clientes.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.nombre;
+    opt.textContent = c.nombre + (c.cuit ? ' ('+c.cuit+')' : '');
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
+
+// Init clientes
+syncClientesAlPOS();
+
+// ══ FIN CLIENTES ══
+
 const modules = {
   dashboard:     { title:'Dashboard',           sub:'Resumen general del negocio' },
   pos:           { title:'Punto de venta',       sub:'Caja y cobros' },
@@ -1338,6 +1717,9 @@ function navigate(mod) {
   } else if (mod === 'pos') {
     actions.innerHTML = '<button class="btn btn-ghost" onclick="cancelarVenta()">🗑 Limpiar carrito</button>';
     stopPosScanner();
+  } else if (mod === 'clientes') {
+    actions.innerHTML = '<button class="btn btn-primary" onclick="showNewCliente()">+ Nuevo cliente</button>';
+    showCliListView();
   } else {
     actions.innerHTML = '';
   }
